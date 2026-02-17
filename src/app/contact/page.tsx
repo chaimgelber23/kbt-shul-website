@@ -55,7 +55,7 @@ export default function ContactPage() {
             </h2>
             {submitted ? (
               <div className="bg-primary/10 border border-primary/30 rounded-2xl p-10 text-center">
-                <span className="text-4xl mb-4 block">&#x2705;</span>
+                <svg className="w-12 h-12 text-primary mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                 <h3 className="text-navy text-xl font-bold mb-2">
                   Message Sent!
                 </h3>
@@ -130,8 +130,8 @@ export default function ContactPage() {
             </h2>
             <div className="space-y-6 mb-10">
               <div className="flex items-start gap-4">
-                <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary text-xl shrink-0">
-                  &#x1F4CD;
+                <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                 </div>
                 <div>
                   <h3 className="text-navy font-bold text-lg">Address</h3>
@@ -143,8 +143,8 @@ export default function ContactPage() {
                 </div>
               </div>
               <div className="flex items-start gap-4">
-                <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary text-xl shrink-0">
-                  &#x2709;
+                <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                 </div>
                 <div>
                   <h3 className="text-navy font-bold text-lg">Email</h3>
@@ -157,8 +157,8 @@ export default function ContactPage() {
                 </div>
               </div>
               <div className="flex items-start gap-4">
-                <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary text-xl shrink-0">
-                  &#x1F570;
+                <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
                 </div>
                 <div>
                   <h3 className="text-navy font-bold text-lg">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -7,9 +8,13 @@ export default function Footer() {
         {/* Logo & Description */}
         <div>
           <div className="flex items-center gap-3 mb-6">
-            <div className="size-8 flex items-center justify-center bg-primary text-navy rounded shadow-md font-bold">
-              &#x05E7;
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Kahal Beis Tefilla"
+              width={40}
+              height={40}
+              className="h-10 w-auto"
+            />
             <h2 className="text-xl font-extrabold tracking-tight">
               KAHAL BEIS TEFILLA
             </h2>
@@ -102,11 +107,11 @@ export default function Footer() {
           </h4>
           <ul className="space-y-4 text-white/70 text-sm font-medium">
             <li className="flex gap-3">
-              <span className="text-primary">&#x1F4CD;</span>
+              <svg className="w-4 h-4 text-primary shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
               <span>16b Ramat Hagolan St, Jerusalem, Israel</span>
             </li>
             <li className="flex gap-3">
-              <span className="text-primary">&#x2709;</span>
+              <svg className="w-4 h-4 text-primary shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
               <Link
                 href="mailto:info@kbtshul.com"
                 className="hover:text-primary transition-colors"

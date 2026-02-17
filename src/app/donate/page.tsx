@@ -121,32 +121,26 @@ export default function DonatePage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
-                icon: "&#x1F4D6;",
                 title: "Torah Learning",
                 desc: "Kollelim, shiurim, and a vibrant Beis Medrash open from early morning to late night",
               },
               {
-                icon: "&#x1F91D;",
                 title: "Community Events",
                 desc: "Weekly kiddushim, holiday celebrations, and family-friendly programming",
               },
               {
-                icon: "&#x2764;",
                 title: "Chesed Programs",
                 desc: "Tzedakah fund, gemach, and support for families in need",
               },
               {
-                icon: "&#x1F46A;",
                 title: "Youth Programs",
                 desc: "Avos Ubanim, Masmidim, and engaging activities for children",
               },
               {
-                icon: "&#x1F3DB;",
                 title: "Building Upkeep",
                 desc: "Maintaining our shul as a welcoming home for the community",
               },
               {
-                icon: "&#x1F4E2;",
                 title: "Online Shiurim",
                 desc: "Reaching hundreds of talmidim worldwide through digital classes",
               },
@@ -156,10 +150,7 @@ export default function DonatePage() {
                 variants={fadeUp}
                 className="bg-white border border-primary/15 rounded-xl p-8 shadow-sm text-center"
               >
-                <span
-                  className="text-4xl mb-4 block"
-                  dangerouslySetInnerHTML={{ __html: item.icon }}
-                />
+                <div className="w-10 h-0.5 bg-primary mx-auto mb-6" />
                 <h3 className="text-navy font-bold text-lg mb-2">
                   {item.title}
                 </h3>

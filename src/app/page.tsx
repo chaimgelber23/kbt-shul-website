@@ -18,7 +18,11 @@ export default function Home() {
     <main>
       {/* Hero Section */}
       <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden bg-navy">
-        <div className="absolute inset-0 bg-gradient-to-t from-navy via-transparent to-navy/50" />
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-30"
+          style={{ backgroundImage: "url('/hero-bg.jpg')" }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/60 to-navy/80" />
         <motion.div
           initial="hidden"
           animate="visible"
@@ -29,8 +33,8 @@ export default function Home() {
             <Image
               src="/logo.png"
               alt="Kahal Beis Tefilla Logo"
-              width={280}
-              height={200}
+              width={450}
+              height={320}
               className="mx-auto drop-shadow-2xl"
               priority
             />
@@ -272,7 +276,7 @@ export default function Home() {
               href="/donate"
               className="bg-primary text-navy px-12 py-5 rounded-xl font-bold text-xl hover:shadow-lg hover:-translate-y-1 transition-all inline-flex items-center gap-3"
             >
-              &#x2764; Donate Now
+              Donate Now
             </Link>
           </div>
         </div>

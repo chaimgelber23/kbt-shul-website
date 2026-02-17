@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
@@ -20,9 +21,13 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3">
-          <div className="size-10 flex items-center justify-center bg-primary text-white rounded-lg shadow-md text-xl font-bold">
-            &#x05E7;
-          </div>
+          <Image
+            src="/logo.png"
+            alt="Kahal Beis Tefilla"
+            width={48}
+            height={48}
+            className="h-12 w-auto"
+          />
           <div>
             <h1 className="text-navy text-xl font-extrabold leading-none tracking-tight">
               KAHAL BEIS

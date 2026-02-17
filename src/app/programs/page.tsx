@@ -48,8 +48,8 @@ export default function ProgramsPage() {
       >
         <div className="max-w-5xl mx-auto">
           <motion.div variants={fadeUp} className="flex items-center gap-4 mb-8">
-            <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary text-2xl">
-              &#x1F4D6;
+            <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center">
+              <div className="w-6 h-0.5 bg-primary" />
             </div>
             <h2 className="serif-heading text-navy text-4xl font-bold">
               Torah Learning
@@ -113,8 +113,8 @@ export default function ProgramsPage() {
       >
         <div className="max-w-5xl mx-auto">
           <motion.div variants={fadeUp} className="flex items-center gap-4 mb-8">
-            <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary text-2xl">
-              &#x1F91D;
+            <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center">
+              <div className="w-6 h-0.5 bg-primary" />
             </div>
             <h2 className="serif-heading text-navy text-4xl font-bold">
               Community Events
@@ -174,8 +174,8 @@ export default function ProgramsPage() {
       >
         <div className="max-w-5xl mx-auto">
           <motion.div variants={fadeUp} className="flex items-center gap-4 mb-8">
-            <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary text-2xl">
-              &#x1F46A;
+            <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center">
+              <div className="w-6 h-0.5 bg-primary" />
             </div>
             <h2 className="serif-heading text-navy text-4xl font-bold">
               Women &amp; Youth
@@ -226,8 +226,8 @@ export default function ProgramsPage() {
       >
         <div className="max-w-5xl mx-auto">
           <motion.div variants={fadeUp} className="flex items-center gap-4 mb-8">
-            <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary text-2xl">
-              &#x2764;
+            <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center">
+              <div className="w-6 h-0.5 bg-primary" />
             </div>
             <h2 className="serif-heading text-navy text-4xl font-bold">
               Chesed
