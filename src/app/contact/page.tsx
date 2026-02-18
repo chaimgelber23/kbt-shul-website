@@ -13,7 +13,29 @@ const stagger = {
 };
 
 export default function ContactPage() {
-  const [submitted, setSubmitted] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    message: "",
+  });
+
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const subject = encodeURIComponent(
+      `Message from ${formData.firstName} ${formData.lastName} — KBT Website`
+    );
+    const body = encodeURIComponent(
+      `From: ${formData.firstName} ${formData.lastName}\nEmail: ${formData.email}\n\n${formData.message}`
+    );
+    window.location.href = `mailto:info@kbtshul.com?subject=${subject}&body=${body}`;
+  }
 
   return (
     <main>
@@ -53,74 +75,68 @@ export default function ContactPage() {
             <h2 className="serif-heading text-navy text-3xl font-bold mb-8">
               Send Us a Message
             </h2>
-            {submitted ? (
-              <div className="bg-primary/10 border border-primary/30 rounded-2xl p-10 text-center">
-                <svg className="w-12 h-12 text-primary mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                <h3 className="text-navy text-xl font-bold mb-2">
-                  Message Sent!
-                </h3>
-                <p className="text-navy/70">
-                  Thank you for reaching out. We&apos;ll get back to you soon.
-                </p>
-              </div>
-            ) : (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  setSubmitted(true);
-                }}
-                className="space-y-6"
-              >
-                <div className="grid sm:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-navy font-semibold text-sm mb-2">
-                      First Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      className="w-full px-4 py-3 rounded-xl border-2 border-navy/10 focus:border-primary focus:outline-none transition-colors bg-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-navy font-semibold text-sm mb-2">
-                      Last Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      className="w-full px-4 py-3 rounded-xl border-2 border-navy/10 focus:border-primary focus:outline-none transition-colors bg-white"
-                    />
-                  </div>
-                </div>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-navy font-semibold text-sm mb-2">
-                    Email *
+                    First Name *
                   </label>
                   <input
-                    type="email"
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
                     required
                     className="w-full px-4 py-3 rounded-xl border-2 border-navy/10 focus:border-primary focus:outline-none transition-colors bg-white"
                   />
                 </div>
                 <div>
                   <label className="block text-navy font-semibold text-sm mb-2">
-                    Message *
+                    Last Name *
                   </label>
-                  <textarea
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
                     required
-                    rows={5}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-navy/10 focus:border-primary focus:outline-none transition-colors bg-white resize-none"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-navy/10 focus:border-primary focus:outline-none transition-colors bg-white"
                   />
                 </div>
-                <button
-                  type="submit"
-                  className="bg-primary text-navy px-10 py-4 rounded-xl font-bold text-lg hover:bg-primary-light transition-all shadow-lg"
-                >
-                  Send Message
-                </button>
-              </form>
-            )}
+              </div>
+              <div>
+                <label className="block text-navy font-semibold text-sm mb-2">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 rounded-xl border-2 border-navy/10 focus:border-primary focus:outline-none transition-colors bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-navy font-semibold text-sm mb-2">
+                  Message *
+                </label>
+                <textarea
+                  name="message"
+                  value={formData.message}
+                  onChange={handleChange}
+                  required
+                  rows={5}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-navy/10 focus:border-primary focus:outline-none transition-colors bg-white resize-none"
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-primary text-navy px-10 py-4 rounded-xl font-bold text-lg hover:bg-primary-light transition-all shadow-lg"
+              >
+                Send Message
+              </button>
+            </form>
           </motion.div>
 
           {/* Contact Info & Map */}
@@ -136,7 +152,7 @@ export default function ContactPage() {
                 <div>
                   <h3 className="text-navy font-bold text-lg">Address</h3>
                   <p className="text-navy/70">
-                    16b Ramat Hagolan Street
+                    21 Ramat Hagolan Street
                     <br />
                     Jerusalem, Israel
                   </p>
@@ -174,7 +190,7 @@ export default function ContactPage() {
             {/* Map Embed */}
             <div className="rounded-2xl overflow-hidden shadow-lg border-2 border-primary/20">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3391.5!2d35.2293!3d31.7985!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzHCsDQ3JzU0LjYiTiAzNcKwMTMnNDUuNSJF!5e0!3m2!1sen!2sil!4v1"
+                src="https://maps.google.com/maps?q=21+Ramat+Hagolan,+Jerusalem,+Israel&t=&z=16&ie=UTF8&iwloc=&output=embed"
                 width="100%"
                 height="300"
                 style={{ border: 0 }}
