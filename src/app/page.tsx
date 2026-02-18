@@ -50,7 +50,7 @@ export default function Home() {
           variants={heroStagger}
           className="relative z-10 text-center px-6 max-w-3xl mx-auto"
         >
-          <motion.h1 variants={heroFadeIn} className="hebrew-heading text-gold-metallic text-5xl sm:text-6xl md:text-8xl font-bold leading-tight drop-shadow-[0_2px_24px_rgba(184,134,45,0.35)]">
+          <motion.h1 variants={heroFadeIn} className="hebrew-heading text-primary text-5xl sm:text-6xl md:text-8xl font-bold leading-tight drop-shadow-[0_2px_24px_rgba(184,134,45,0.3)]">
             &#x05E7;&#x05D4;&#x05DC; &#x05D1;&#x05D9;&#x05EA; &#x05EA;&#x05E4;&#x05D9;&#x05DC;&#x05D4;
           </motion.h1>
 
