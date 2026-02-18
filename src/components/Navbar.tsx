@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,20 +14,34 @@ const navLinks = [
   { href: "/donate", label: "Donate", accent: true },
 ];
 
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-50 w-full bg-bg-light/95 backdrop-blur-sm border-b border-primary/10 px-6 lg:px-20 py-4">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3">
+        <Link
+          href="/"
+          onClick={(e) => {
+            if (pathname === "/") {
+              e.preventDefault();
+              scrollToTop();
+            }
+          }}
+          className="flex items-center gap-4"
+        >
           <Image
             src="/logo.png"
             alt="Kahal Beis Tefilla"
-            width={64}
-            height={64}
-            className="h-14 md:h-16 w-auto"
+            width={120}
+            height={120}
+            className="h-16 md:h-20 w-auto"
           />
           <div>
             <h1 className="text-navy text-xl font-extrabold leading-none tracking-tight">
@@ -44,6 +59,12 @@ export default function Navbar() {
             <Link
               key={link.href}
               href={link.href}
+              onClick={(e) => {
+                if (link.href === "/" && pathname === "/") {
+                  e.preventDefault();
+                  scrollToTop();
+                }
+              }}
               className={`text-sm font-semibold transition-colors ${
                 link.accent
                   ? "text-primary italic hover:text-primary-light"
@@ -108,7 +129,13 @@ export default function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  onClick={() => setMobileOpen(false)}
+                  onClick={(e) => {
+                    setMobileOpen(false);
+                    if (link.href === "/" && pathname === "/") {
+                      e.preventDefault();
+                      scrollToTop();
+                    }
+                  }}
                   className={`text-base font-semibold transition-colors ${
                     link.accent ? "text-primary italic" : "text-navy"
                   }`}

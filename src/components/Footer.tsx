@@ -7,13 +7,13 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
         {/* Logo & Description */}
         <div>
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-4 mb-6">
             <Image
               src="/logo.png"
               alt="Kahal Beis Tefilla"
-              width={56}
-              height={56}
-              className="h-14 w-auto"
+              width={80}
+              height={80}
+              className="h-16 w-auto"
             />
             <h2 className="text-xl font-extrabold tracking-tight">
               KAHAL BEIS TEFILLA
