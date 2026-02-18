@@ -24,9 +24,9 @@ export default function Navbar() {
           <Image
             src="/logo.png"
             alt="Kahal Beis Tefilla"
-            width={48}
-            height={48}
-            className="h-12 w-auto"
+            width={64}
+            height={64}
+            className="h-14 md:h-16 w-auto"
           />
           <div>
             <h1 className="text-navy text-xl font-extrabold leading-none tracking-tight">

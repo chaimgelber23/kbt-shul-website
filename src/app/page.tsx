@@ -120,6 +120,28 @@ export default function Home() {
         </div>
       </motion.section>
 
+      {/* Community Photo Banner */}
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+        variants={fadeUp}
+        className="relative h-72 md:h-96 overflow-hidden"
+      >
+        <Image
+          src="/community-gathering.jpg"
+          alt="A community gathering at Kahal Beis Tefilla"
+          fill
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy/70 via-navy/20 to-transparent" />
+        <div className="absolute bottom-8 left-8 md:left-12">
+          <p className="text-white/90 text-lg md:text-xl font-light italic drop-shadow-lg">
+            &ldquo;Not just a place for minyanim &mdash; a place to form connections.&rdquo;
+          </p>
+        </div>
+      </motion.section>
+
       {/* Davening Schedule Section */}
       <motion.section
         initial="hidden"

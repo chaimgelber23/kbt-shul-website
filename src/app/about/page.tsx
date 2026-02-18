@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
 
 const fadeUp = {
@@ -89,6 +90,22 @@ export default function AboutPage() {
               to grow together.
             </motion.p>
           </div>
+
+          {/* Community Photo */}
+          <motion.div variants={fadeUp} className="mt-12">
+            <div className="rounded-2xl overflow-hidden shadow-xl">
+              <Image
+                src="/community-gathering.jpg"
+                alt="A community gathering at Kahal Beis Tefilla"
+                width={900}
+                height={500}
+                className="w-full h-auto object-cover"
+              />
+            </div>
+            <p className="text-navy/50 text-sm text-center mt-3 italic">
+              A community gathering at Kahal Beis Tefilla
+            </p>
+          </motion.div>
         </div>
       </motion.section>
 
@@ -115,10 +132,14 @@ export default function AboutPage() {
           <div className="grid md:grid-cols-3 gap-12">
             <motion.div variants={fadeUp} className="md:col-span-1">
               <div className="bg-navy/5 rounded-2xl p-8 text-center">
-                <div className="w-32 h-32 bg-primary/20 rounded-full mx-auto mb-6 flex items-center justify-center">
-                  <span className="text-primary text-4xl font-bold serif-heading">
-                    RDS
-                  </span>
+                <div className="w-48 h-48 rounded-full mx-auto mb-6 overflow-hidden shadow-lg border-4 border-primary/20">
+                  <Image
+                    src="/rabbi-steinhauer.jpg"
+                    alt="Rabbi Dovid Steinhauer"
+                    width={192}
+                    height={192}
+                    className="w-full h-full object-cover object-top"
+                  />
                 </div>
                 <h3 className="serif-heading text-navy text-2xl font-bold">
                   Rabbi Dovid Steinhauer
