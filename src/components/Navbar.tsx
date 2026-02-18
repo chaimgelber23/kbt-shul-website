@@ -12,6 +12,7 @@ const navLinks = [
   { href: "/davening", label: "Davening Times" },
   { href: "/programs", label: "Programs" },
   { href: "/shiurim", label: "Shiurim" },
+  { href: "/membership", label: "Membership" },
   { href: "/donate", label: "Donate", accent: true },
 ];
 

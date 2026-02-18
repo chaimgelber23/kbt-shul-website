@@ -64,6 +64,14 @@ export default function Footer() {
             </li>
             <li>
               <Link
+                href="/membership"
+                className="hover:text-primary transition-colors"
+              >
+                Membership
+              </Link>
+            </li>
+            <li>
+              <Link
                 href="/donate"
                 className="hover:text-primary transition-colors"
               >
