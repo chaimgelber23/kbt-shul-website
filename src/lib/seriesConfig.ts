@@ -13,8 +13,36 @@ function extractHalachaTopic(title: string): { section?: string; detail?: string
   // "Halacha series - Shabbos, kiddush" → section="Kiddush"
   const match = title.match(/Halacha\s+series\s*[-–:]\s*Shabbos\s*[,;:]\s*(.+)/i);
   if (match) return { section: match[1].trim() };
-  // Fallback: just "Halacha series - Shabbos"
   return {};
+}
+
+/** Map Machshava titles to Yom Tov / topic categories */
+function extractMachshavaTopic(title: string): { section?: string; detail?: string } {
+  const cleaned = title.replace(/^Machshava\s+series[\s:,\-–]+\s*/i, "").trim();
+  const lower = cleaned.toLowerCase();
+
+  // Match Yamim Tovim
+  if (/rosh\s+hashana/i.test(lower) || /shofar/i.test(lower)) return { section: "Rosh Hashana" };
+  if (/yom\s+kippur/i.test(lower) || /neila/i.test(lower)) return { section: "Yom Kippur" };
+  if (/sukk?os/i.test(lower) || /hoshana\s+rabba/i.test(lower) || /arava/i.test(lower))
+    return { section: "Sukkos" };
+  if (/simchas\s+torah/i.test(lower)) return { section: "Simchas Torah" };
+  if (/koheles/i.test(lower)) return { section: "Sukkos" };
+  if (/chanuk/i.test(lower) || /channuk/i.test(lower)) return { section: "Chanuka" };
+  if (/purim/i.test(lower)) return { section: "Purim" };
+  if (/pesach/i.test(lower) || /seder/i.test(lower) || /hagad/i.test(lower) || /egypt/i.test(lower) || /pharoh/i.test(lower) || /shvi'i shel pesach/i.test(lower))
+    return { section: "Pesach" };
+  if (/shavuos/i.test(lower) || /sinai/i.test(lower) || /naaseh/i.test(lower)) return { section: "Shavuos" };
+  if (/tisha\s+b'?av/i.test(lower)) return { section: "Tisha B'Av" };
+  if (/seventeenth\s+of\s+tammuz/i.test(lower)) return { section: "Tisha B'Av" };
+  if (/teves/i.test(lower) || /10th of teves/i.test(lower) || /asara b'teves/i.test(lower) || /tenth of teves/i.test(lower))
+    return { section: "Asara B'Teves" };
+  if (/selichos/i.test(lower)) return { section: "Selichos" };
+  if (/teshuva/i.test(lower) || /shovavim/i.test(lower)) return { section: "Teshuva" };
+  if (/lag\s+b[ao]?m?omer/i.test(lower) || /omer/i.test(lower)) return { section: "Sefirah & Lag BaOmer" };
+  if (/rosh\s+chodesh/i.test(lower)) return { section: "Rosh Chodesh" };
+
+  return { section: "General Machshava" };
 }
 
 // --- Landing page group labels ---
@@ -29,7 +57,7 @@ export const SERIES_GROUPS = {
 // e.g., "hilchos-shabbos" before "halacha-series"
 
 export const SERIES: SeriesDef[] = [
-  // ========== NAVI ==========
+  // ========== NAVI (in Tanach order) ==========
   {
     slug: "yehoshua",
     name: "Yehoshua",
@@ -39,6 +67,7 @@ export const SERIES: SeriesDef[] = [
     navType: "perek",
     extractNav: (t) => extractPerek(t, /^Yehoshua[,:]?\s*/i),
     sortDefault: "oldest",
+    displayOrder: 1,
   },
   {
     slug: "shoftim",
@@ -49,6 +78,7 @@ export const SERIES: SeriesDef[] = [
     navType: "perek",
     extractNav: (t) => extractPerek(t, /^Shoftim[,:]?\s*/i),
     sortDefault: "oldest",
+    displayOrder: 2,
   },
   {
     slug: "shmuel",
@@ -59,6 +89,7 @@ export const SERIES: SeriesDef[] = [
     navType: "perek",
     extractNav: (t) => extractPerek(t, /^Shmuel\s*(?:II?)?[,:]?\s*/i),
     sortDefault: "oldest",
+    displayOrder: 3,
   },
   {
     slug: "melachim",
@@ -69,6 +100,7 @@ export const SERIES: SeriesDef[] = [
     navType: "perek",
     extractNav: (t) => extractPerek(t, /^Melachim\s*(?:I+)?[,:]?\s*/i),
     sortDefault: "oldest",
+    displayOrder: 4,
   },
 
   // ========== HALACHA ==========
@@ -190,10 +222,11 @@ export const SERIES: SeriesDef[] = [
   {
     slug: "machshava",
     name: "Machshava",
-    description: "Jewish thought and philosophy — exploring hashkafa topics in depth.",
+    description: "Jewish thought and philosophy — hashkafa topics on Yamim Tovim, tefilla, and more.",
     patterns: [/^Machshava/i],
     group: null,
-    navType: "sequential",
+    navType: "topic",
+    extractNav: extractMachshavaTopic,
   },
   {
     slug: "pirkei-avos",

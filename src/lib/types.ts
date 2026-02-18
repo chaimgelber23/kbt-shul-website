@@ -59,6 +59,8 @@ export interface SeriesDef {
   extractNav?: (title: string) => { section?: string; detail?: string };
   /** Default sort order (oldest for sequential study series) */
   sortDefault?: SortOrder;
+  /** Display order within a group (lower = first). Used for Tanach order in Navi. */
+  displayOrder?: number;
 }
 
 export interface SeriesStats {
@@ -68,4 +70,5 @@ export interface SeriesStats {
   group: SeriesGroup;
   episodeCount: number;
   latestDate: string;
+  displayOrder?: number;
 }

@@ -50,6 +50,7 @@ export async function getLandingData(): Promise<{
         group: series.group,
         episodeCount: matching.length,
         latestDate,
+        displayOrder: series.displayOrder,
       });
     }
   }
@@ -66,7 +67,14 @@ export async function getLandingData(): Promise<{
       description: meta.description,
       series: allStats
         .filter((s) => s.group === id)
-        .sort((a, b) => b.episodeCount - a.episodeCount),
+        .sort((a, b) => {
+          // Sort by displayOrder if available (e.g., Tanach order for Navi)
+          if (a.displayOrder != null && b.displayOrder != null)
+            return a.displayOrder - b.displayOrder;
+          if (a.displayOrder != null) return -1;
+          if (b.displayOrder != null) return 1;
+          return b.episodeCount - a.episodeCount;
+        }),
     }))
     .filter((g) => g.series.length > 0);
 
