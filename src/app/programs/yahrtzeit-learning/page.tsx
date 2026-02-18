@@ -388,10 +388,16 @@ export default function YahrtzeitLearningPage() {
           </motion.h2>
           <motion.p
             variants={fadeUp}
-            className="text-navy/60 text-center mb-10"
+            className="text-navy/60 text-center mb-4"
           >
             Reserve a day of learning for your loved one&apos;s yahrtzeit.
             Suggested donation: $360.
+          </motion.p>
+          <motion.p
+            variants={fadeUp}
+            className="text-navy/50 text-sm text-center mb-10"
+          >
+            Payment will only be requested after the learning has been completed.
           </motion.p>
 
           <motion.div variants={fadeUp}>
@@ -412,58 +418,63 @@ export default function YahrtzeitLearningPage() {
                     />
                   </svg>
                   <h3 className="serif-heading text-navy text-2xl font-bold mb-3">
-                    Thank You
+                    Registration Successful
                   </h3>
-                  <p className="text-navy/70 text-lg mb-2">
-                    Your reservation has been received. We will be in touch to
-                    confirm the date.
+                  <p className="text-navy/70 text-lg mb-4">
+                    Someone will email you to confirm before the yahrtzeit.
                   </p>
                   <p className="text-navy/50 text-sm">
-                    Suggested donation: $360 per yahrtzeit
+                    Payment will only be requested after the learning has been
+                    completed.
                   </p>
                 </div>
 
-                {/* Payment links */}
-                <div className="grid sm:grid-cols-2 gap-6">
-                  <a
-                    href="https://www.matara.pro/nedarimplus/online/?mosad=7012328"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group bg-white border-2 border-primary/20 rounded-2xl p-8 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all text-center"
-                  >
-                    <div className="size-16 bg-primary/10 rounded-full mx-auto mb-4 flex items-center justify-center">
-                      <span className="text-primary text-3xl">&#x20AA;</span>
-                    </div>
-                    <h3 className="serif-heading text-navy text-xl font-bold mb-2">
-                      Pay in Shekels
-                    </h3>
-                    <p className="text-navy/60 text-sm mb-4">
-                      Via Nedarim Plus
-                    </p>
-                    <span className="inline-flex items-center gap-2 bg-primary text-navy px-6 py-2.5 rounded-xl font-bold text-sm group-hover:bg-primary-light transition-colors">
-                      Pay Now &#x2192;
-                    </span>
-                  </a>
+                <div className="text-center">
+                  <p className="text-navy/60 text-sm mb-6">
+                    If you would like to make the donation for the learning now,
+                    use these links:
+                  </p>
+                  <div className="grid sm:grid-cols-2 gap-6">
+                    <a
+                      href="https://www.matara.pro/nedarimplus/online/?mosad=7012328"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group bg-white border-2 border-primary/20 rounded-2xl p-8 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all text-center"
+                    >
+                      <div className="size-16 bg-primary/10 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <span className="text-primary text-3xl">&#x20AA;</span>
+                      </div>
+                      <h3 className="serif-heading text-navy text-xl font-bold mb-2">
+                        Pay in Shekels
+                      </h3>
+                      <p className="text-navy/60 text-sm mb-4">
+                        Via Nedarim Plus
+                      </p>
+                      <span className="inline-flex items-center gap-2 bg-primary text-navy px-6 py-2.5 rounded-xl font-bold text-sm group-hover:bg-primary-light transition-colors">
+                        Pay Now &#x2192;
+                      </span>
+                    </a>
 
-                  <a
-                    href="https://kbt.kollelnernaftali.org/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group bg-white border-2 border-primary/20 rounded-2xl p-8 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all text-center"
-                  >
-                    <div className="size-16 bg-primary/10 rounded-full mx-auto mb-4 flex items-center justify-center">
-                      <span className="text-primary text-3xl">$</span>
-                    </div>
-                    <h3 className="serif-heading text-navy text-xl font-bold mb-2">
-                      Pay via Kollel Ner Naftali
-                    </h3>
-                    <p className="text-navy/60 text-sm mb-4">
-                      Tax-deductible (USD)
-                    </p>
-                    <span className="inline-flex items-center gap-2 bg-primary text-navy px-6 py-2.5 rounded-xl font-bold text-sm group-hover:bg-primary-light transition-colors">
-                      Pay Now &#x2192;
-                    </span>
-                  </a>
+                    <a
+                      href="https://kbt.kollelnernaftali.org/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group bg-white border-2 border-primary/20 rounded-2xl p-8 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all text-center"
+                    >
+                      <div className="size-16 bg-primary/10 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <span className="text-primary text-3xl">$</span>
+                      </div>
+                      <h3 className="serif-heading text-navy text-xl font-bold mb-2">
+                        Pay via Kollel Ner Naftali
+                      </h3>
+                      <p className="text-navy/60 text-sm mb-4">
+                        Tax-deductible (USD)
+                      </p>
+                      <span className="inline-flex items-center gap-2 bg-primary text-navy px-6 py-2.5 rounded-xl font-bold text-sm group-hover:bg-primary-light transition-colors">
+                        Pay Now &#x2192;
+                      </span>
+                    </a>
+                  </div>
                 </div>
               </div>
             ) : (
