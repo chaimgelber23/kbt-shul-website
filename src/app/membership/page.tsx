@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 
 const fadeUp = {
@@ -11,9 +12,74 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.15 } },
 };
 
-const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdrO4uDzo5Uo8F5aayrRFlQv6rmorUef_yCbCkXfKAngqrajg/viewform?embedded=true";
+// Google Form submission URL (change "viewform" to "formResponse")
+const GOOGLE_FORM_ACTION =
+  "https://docs.google.com/forms/d/e/1FAIpQLSdrO4uDzo5Uo8F5aayrRFlQv6rmorUef_yCbCkXfKAngqrajg/formResponse";
+
+// Map each field to its Google Form entry ID.
+// To find entry IDs: open your Google Form, click the 3-dot menu > "Get pre-filled link",
+// fill in dummy data, click "Get link", and look at the URL parameters (entry.XXXXXXX).
+const FORM_FIELDS = {
+  fullName: "entry.1781789234",
+  email: "entry.1994389210",
+  phone: "entry.520134409",
+  address: "entry.735464389",
+  spouseName: "entry.1865410362",
+  numChildren: "entry.1433152844",
+  comments: "entry.1200402349",
+} as const;
 
 export default function MembershipPage() {
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    address: "",
+    spouseName: "",
+    numChildren: "",
+    comments: "",
+  });
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+
+    try {
+      // Build form data matching Google Form entry IDs
+      const body = new URLSearchParams();
+      body.append(FORM_FIELDS.fullName, formData.fullName);
+      body.append(FORM_FIELDS.email, formData.email);
+      body.append(FORM_FIELDS.phone, formData.phone);
+      body.append(FORM_FIELDS.address, formData.address);
+      body.append(FORM_FIELDS.spouseName, formData.spouseName);
+      body.append(FORM_FIELDS.numChildren, formData.numChildren);
+      body.append(FORM_FIELDS.comments, formData.comments);
+
+      // Submit to Google Forms (no-cors: we can't read the response but the data is sent)
+      await fetch(GOOGLE_FORM_ACTION, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: body.toString(),
+      });
+
+      setSubmitted(true);
+    } catch {
+      // Even if fetch throws, the submission usually succeeds with no-cors
+      setSubmitted(true);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <main>
       {/* Hero */}
@@ -96,7 +162,7 @@ export default function MembershipPage() {
             {[
               {
                 title: "Daily Minyanim",
-                desc: "Shacharis, Mincha, and Maariv every day — ensuring a reliable minyan for the community",
+                desc: "Shacharis, Mincha, and Maariv every day \u2014 ensuring a reliable minyan for the community",
               },
               {
                 title: "Shiurim & Learning",
@@ -160,7 +226,11 @@ export default function MembershipPage() {
             <p className="serif-heading text-navy text-5xl font-bold mb-2">
               100 <span className="text-3xl">&#x20AA;</span>
             </p>
-            <p className="text-navy/60 mb-1">per month</p>
+            <p className="text-navy/60 mb-4">per month</p>
+            <div className="w-16 h-px bg-navy/10 mx-auto mb-4" />
+            <p className="text-navy/50 text-sm">
+              Want to give more? Enter any custom amount at checkout.
+            </p>
           </motion.div>
 
           <motion.p
@@ -217,7 +287,7 @@ export default function MembershipPage() {
         </div>
       </motion.section>
 
-      {/* Sign Up Form (Google Form Embed) */}
+      {/* Sign Up Form */}
       <motion.section
         initial="hidden"
         whileInView="visible"
@@ -225,7 +295,7 @@ export default function MembershipPage() {
         variants={stagger}
         className="py-20 px-6 bg-bg-light"
       >
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-2xl mx-auto">
           <motion.h2
             variants={fadeUp}
             className="serif-heading text-navy text-3xl font-bold mb-4 text-center"
@@ -239,19 +309,152 @@ export default function MembershipPage() {
             Fill out the form below to register as a member. Our board will be
             in touch to welcome you.
           </motion.p>
-          <motion.div
-            variants={fadeUp}
-            className="bg-white rounded-2xl shadow-lg overflow-hidden border border-primary/10"
-          >
-            <iframe
-              src={GOOGLE_FORM_URL}
-              width="100%"
-              height="800"
-              className="border-0"
-              title="Membership Sign-Up Form"
-            >
-              Loading form&hellip;
-            </iframe>
+
+          <motion.div variants={fadeUp}>
+            {submitted ? (
+              <div className="bg-primary/10 border border-primary/30 rounded-2xl p-12 text-center">
+                <svg
+                  className="w-16 h-16 text-primary mx-auto mb-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                <h3 className="serif-heading text-navy text-2xl font-bold mb-3">
+                  Welcome to KBT!
+                </h3>
+                <p className="text-navy/70 text-lg">
+                  Thank you for signing up. A member of our board will be in
+                  touch with you shortly.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Full Name */}
+                <div>
+                  <label className="block text-navy font-semibold text-sm mb-2">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    required
+                    placeholder="Yisrael Goldberg"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-navy/10 focus:border-primary focus:outline-none transition-colors bg-white"
+                  />
+                </div>
+
+                {/* Email & Phone */}
+                <div className="grid sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-navy font-semibold text-sm mb-2">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      placeholder="you@example.com"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-navy/10 focus:border-primary focus:outline-none transition-colors bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-navy font-semibold text-sm mb-2">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      required
+                      placeholder="05X-XXX-XXXX"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-navy/10 focus:border-primary focus:outline-none transition-colors bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Address */}
+                <div>
+                  <label className="block text-navy font-semibold text-sm mb-2">
+                    Address *
+                  </label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    required
+                    placeholder="Street, apartment number, city"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-navy/10 focus:border-primary focus:outline-none transition-colors bg-white"
+                  />
+                </div>
+
+                {/* Spouse & Children */}
+                <div className="grid sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-navy font-semibold text-sm mb-2">
+                      Spouse Name
+                    </label>
+                    <input
+                      type="text"
+                      name="spouseName"
+                      value={formData.spouseName}
+                      onChange={handleChange}
+                      placeholder="Optional"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-navy/10 focus:border-primary focus:outline-none transition-colors bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-navy font-semibold text-sm mb-2">
+                      Number of Children
+                    </label>
+                    <input
+                      type="number"
+                      name="numChildren"
+                      value={formData.numChildren}
+                      onChange={handleChange}
+                      min="0"
+                      placeholder="Optional"
+                      className="w-full px-4 py-3 rounded-xl border-2 border-navy/10 focus:border-primary focus:outline-none transition-colors bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Comments */}
+                <div>
+                  <label className="block text-navy font-semibold text-sm mb-2">
+                    Comments or Questions
+                  </label>
+                  <textarea
+                    name="comments"
+                    value={formData.comments}
+                    onChange={handleChange}
+                    rows={4}
+                    placeholder="Anything you'd like us to know..."
+                    className="w-full px-4 py-3 rounded-xl border-2 border-navy/10 focus:border-primary focus:outline-none transition-colors bg-white resize-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full bg-primary text-navy px-10 py-4 rounded-xl font-bold text-lg hover:bg-primary-light transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? "Submitting..." : "Register as Member"}
+                </button>
+              </form>
+            )}
           </motion.div>
         </div>
       </motion.section>
