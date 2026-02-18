@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-primary: #c9a74a;
-  --color-primary-light: #d4b85e;
+  --color-primary: #B8943E;
+  --color-primary-light: #C9A54E;
   --color-navy: #1B2A4A;
   --color-navy-light: #2a3d63;
   --color-bg-light: #fbfaf9;
@@ -34,4 +34,20 @@ html {
 /* Hebrew serif utility */
 .hebrew-heading {
   font-family: var(--font-hebrew), serif;
+}
+
+/* Metallic gold text effect */
+.text-gold-metallic {
+  background: linear-gradient(
+    180deg,
+    #BF953F 0%,
+    #F5E6A3 22%,
+    #D4A84B 42%,
+    #F0D68A 58%,
+    #B8862D 78%,
+    #A67C32 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
