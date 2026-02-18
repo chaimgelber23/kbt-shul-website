@@ -84,7 +84,7 @@ export default function Home() {
             </Link>
             <Link
               href="/about"
-              className="text-white/50 text-xs sm:text-sm tracking-[0.2em] uppercase font-medium hover:text-white/80 transition-colors duration-300"
+              className="border border-white/20 text-white/70 px-8 py-3 text-xs sm:text-sm tracking-[0.2em] uppercase font-semibold hover:bg-white/5 hover:border-white/40 transition-all duration-300"
             >
               About Us
             </Link>
