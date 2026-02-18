@@ -132,7 +132,7 @@ export default function Navbar() {
                       {/* Arrow */}
                       <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-l border-t border-primary/10 rotate-45" />
 
-                      <div className="py-2 relative">
+                      <div className="py-2 relative max-h-80 overflow-y-auto scrollbar-thin">
                         {shiurimDropdown.map((item, i) => (
                           <Link
                             key={item.href}
@@ -261,7 +261,7 @@ export default function Navbar() {
                           exit={{ height: 0, opacity: 0 }}
                           className="overflow-hidden"
                         >
-                          <div className="flex flex-col gap-1 pl-4 pt-2">
+                          <div className="flex flex-col gap-1 pl-4 pt-2 max-h-60 overflow-y-auto scrollbar-thin">
                             {shiurimDropdown.map((item) => (
                               <Link
                                 key={item.href}

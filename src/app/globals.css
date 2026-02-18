@@ -36,6 +36,28 @@ html {
   font-family: var(--font-hebrew), serif;
 }
 
+/* Thin scrollbar utility */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(196, 162, 69, 0.2) transparent;
+}
+.scrollbar-thin:hover {
+  scrollbar-color: rgba(196, 162, 69, 0.4) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(196, 162, 69, 0.2);
+  border-radius: 9999px;
+}
+.scrollbar-thin:hover::-webkit-scrollbar-thumb {
+  background: rgba(196, 162, 69, 0.4);
+}
+
 /* Metallic gold text effect */
 .text-gold-metallic {
   background: linear-gradient(
