@@ -56,6 +56,14 @@ export default function Footer() {
             </li>
             <li>
               <Link
+                href="/shiurim"
+                className="hover:text-primary transition-colors"
+              >
+                Shiurim
+              </Link>
+            </li>
+            <li>
+              <Link
                 href="/donate"
                 className="hover:text-primary transition-colors"
               >

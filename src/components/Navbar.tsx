@@ -11,6 +11,7 @@ const navLinks = [
   { href: "/about", label: "About" },
   { href: "/davening", label: "Davening Times" },
   { href: "/programs", label: "Programs" },
+  { href: "/shiurim", label: "Shiurim" },
   { href: "/donate", label: "Donate", accent: true },
 ];
 
