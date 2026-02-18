@@ -27,6 +27,7 @@ const shiurimDropdown = [
   { label: "Ruach Chaim", href: "/shiurim/ruach-chaim", description: "On Pirkei Avos" },
   { label: "Hilchos Shabbos", href: "/shiurim/hilchos-shabbos", description: "Laws of Shabbos" },
   { label: "Hilchos Teshuva", href: "/shiurim/hilchos-teshuva", description: "Laws of Repentance" },
+  { label: "Shir Hashirim", href: "/shiurim/shir-hashirim", description: "Song of Songs" },
   { label: "Navi", href: "/shiurim/yehoshua", description: "Yehoshua, Shoftim, Shmuel..." },
   { label: "Tefilla", href: "/shiurim/tefilla", description: "Understanding prayer" },
 ];
