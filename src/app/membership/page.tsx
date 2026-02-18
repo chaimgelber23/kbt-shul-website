@@ -39,6 +39,8 @@ export default function MembershipPage() {
     numChildren: "",
     comments: "",
   });
+  const [pledgedAmount, setPledgedAmount] = useState("100");
+  const [customAmount, setCustomAmount] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -61,7 +63,9 @@ export default function MembershipPage() {
       body.append(FORM_FIELDS.address, formData.address);
       body.append(FORM_FIELDS.spouseName, formData.spouseName);
       body.append(FORM_FIELDS.numChildren, formData.numChildren);
-      body.append(FORM_FIELDS.comments, formData.comments);
+      // Include pledged amount in comments so the board sees it
+      const commentsWithAmount = `Pledged: ${pledgedAmount} ₪/month${formData.comments ? `\n${formData.comments}` : ""}`;
+      body.append(FORM_FIELDS.comments, commentsWithAmount);
 
       // Submit to Google Forms (no-cors: we can't read the response but the data is sent)
       await fetch(GOOGLE_FORM_ACTION, {
@@ -223,14 +227,36 @@ export default function MembershipPage() {
             <p className="text-navy/60 text-sm uppercase tracking-widest font-semibold mb-3">
               Monthly Membership
             </p>
-            <p className="serif-heading text-navy text-5xl font-bold mb-2">
-              100 <span className="text-3xl">&#x20AA;</span>
-            </p>
-            <p className="text-navy/60 mb-4">per month</p>
-            <div className="w-16 h-px bg-navy/10 mx-auto mb-4" />
-            <p className="text-navy/50 text-sm">
-              Want to give more? Enter any custom amount at checkout.
-            </p>
+            {customAmount ? (
+              <>
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <input
+                    type="number"
+                    min="1"
+                    value={pledgedAmount}
+                    onChange={(e) => setPledgedAmount(e.target.value)}
+                    autoFocus
+                    className="serif-heading text-navy text-5xl font-bold w-32 text-center bg-transparent border-b-2 border-primary focus:outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <span className="serif-heading text-navy text-3xl font-bold">&#x20AA;</span>
+                </div>
+                <p className="text-navy/60">per month</p>
+              </>
+            ) : (
+              <>
+                <p className="serif-heading text-navy text-5xl font-bold mb-2">
+                  100 <span className="text-3xl">&#x20AA;</span>
+                </p>
+                <p className="text-navy/60 mb-4">per month</p>
+                <button
+                  type="button"
+                  onClick={() => setCustomAmount(true)}
+                  className="text-primary text-sm font-semibold hover:text-primary-light transition-colors"
+                >
+                  Choose a custom amount
+                </button>
+              </>
+            )}
           </motion.div>
 
           <motion.p

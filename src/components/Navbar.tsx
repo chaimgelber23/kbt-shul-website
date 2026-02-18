@@ -20,14 +20,15 @@ const navLinks = [
 const shiurimDropdown = [
   { label: "All Shiurim", href: "/shiurim", description: "Browse all series" },
   { label: "Parshas HaShavua", href: "/shiurim/parsha", description: "Weekly Torah portion" },
+  { label: "Yamim Tovim", href: "/shiurim/yamim-tovim", description: "Holidays & Yom Tov shiurim" },
   { label: "Kuzari", href: "/shiurim/kuzari", description: "Sefer HaKuzari" },
-  { label: "Machshava", href: "/shiurim/machshava", description: "Yamim Tovim & hashkafa" },
   { label: "Mesilas Yesharim", href: "/shiurim/mesilas-yesharim", description: "Path of the Just" },
+  { label: "Shir Hashirim", href: "/shiurim/shir-hashirim", description: "Song of Songs" },
+  { label: "Machshava", href: "/shiurim/machshava", description: "Hashkafa & Jewish thought" },
   { label: "Pirkei Avos", href: "/shiurim/pirkei-avos", description: "With the Maharal" },
   { label: "Ruach Chaim", href: "/shiurim/ruach-chaim", description: "On Pirkei Avos" },
   { label: "Hilchos Shabbos", href: "/shiurim/hilchos-shabbos", description: "Laws of Shabbos" },
   { label: "Hilchos Teshuva", href: "/shiurim/hilchos-teshuva", description: "Laws of Repentance" },
-  { label: "Shir Hashirim", href: "/shiurim/shir-hashirim", description: "Song of Songs" },
   { label: "Navi", href: "/shiurim/yehoshua", description: "Yehoshua, Shoftim, Shmuel..." },
   { label: "Tefilla", href: "/shiurim/tefilla", description: "Understanding prayer" },
 ];

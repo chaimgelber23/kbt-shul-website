@@ -16,33 +16,52 @@ function extractHalachaTopic(title: string): { section?: string; detail?: string
   return {};
 }
 
+/** Map Yamim Tovim / topic categories from a title (used by Machshava + standalone Yom Tov) */
+function classifyYomTovTopic(lower: string): string | null {
+  if (/rosh\s+hashana/i.test(lower) || /shofar/i.test(lower) || /tekiy/i.test(lower) || /malchuyos/i.test(lower) || /zichronos/i.test(lower))
+    return "Rosh Hashana";
+  if (/yom\s+kippur/i.test(lower) || /neila/i.test(lower) || /kohain\s+gadol/i.test(lower))
+    return "Yom Kippur";
+  if (/sukk?os/i.test(lower) || /hoshana\s+rabba/i.test(lower) || /arava/i.test(lower) || /chol\s+hamoed/i.test(lower))
+    return "Sukkos";
+  if (/simchas\s+torah/i.test(lower) || /hakafos/i.test(lower) || /hatkafos/i.test(lower))
+    return "Simchas Torah";
+  if (/koheles/i.test(lower)) return "Sukkos";
+  if (/chanuk/i.test(lower) || /channuk/i.test(lower)) return "Chanuka";
+  if (/purim/i.test(lower)) return "Purim";
+  if (/pesach/i.test(lower) || /seder\b/i.test(lower) || /hagad/i.test(lower) || /egypt/i.test(lower) || /pharoh/i.test(lower) || /shvi'i shel pesach/i.test(lower) || /shevi'i shel pesach/i.test(lower) || /matza/i.test(lower))
+    return "Pesach";
+  if (/shavuos/i.test(lower) || /sinai/i.test(lower) || /naaseh/i.test(lower)) return "Shavuos";
+  if (/tisha\s+b'?av/i.test(lower)) return "Tisha B'Av";
+  if (/seventeenth\s+of\s+tammuz/i.test(lower)) return "Tisha B'Av";
+  if (/teves/i.test(lower) || /10th of teves/i.test(lower) || /asara b'teves/i.test(lower) || /tenth of teves/i.test(lower))
+    return "Asara B'Teves";
+  if (/selichos/i.test(lower) || /kinnos/i.test(lower)) return "Selichos";
+  if (/teshuva/i.test(lower) || /shovavim/i.test(lower)) return "Teshuva";
+  if (/lag\s+b[ao]?m?omer/i.test(lower) || /omer/i.test(lower)) return "Sefirah & Lag BaOmer";
+  if (/rosh\s+chodesh/i.test(lower)) return "Rosh Chodesh";
+  if (/ellul/i.test(lower) || /elul/i.test(lower)) return "Elul";
+  if (/shabbos\s+shuva/i.test(lower)) return "Teshuva";
+  if (/shabbos\s+hagadol/i.test(lower)) return "Pesach";
+  return null;
+}
+
 /** Map Machshava titles to Yom Tov / topic categories */
 function extractMachshavaTopic(title: string): { section?: string; detail?: string } {
   const cleaned = title.replace(/^Machshava\s+series[\s:,\-–]+\s*/i, "").trim();
   const lower = cleaned.toLowerCase();
 
-  // Match Yamim Tovim
-  if (/rosh\s+hashana/i.test(lower) || /shofar/i.test(lower)) return { section: "Rosh Hashana" };
-  if (/yom\s+kippur/i.test(lower) || /neila/i.test(lower)) return { section: "Yom Kippur" };
-  if (/sukk?os/i.test(lower) || /hoshana\s+rabba/i.test(lower) || /arava/i.test(lower))
-    return { section: "Sukkos" };
-  if (/simchas\s+torah/i.test(lower)) return { section: "Simchas Torah" };
-  if (/koheles/i.test(lower)) return { section: "Sukkos" };
-  if (/chanuk/i.test(lower) || /channuk/i.test(lower)) return { section: "Chanuka" };
-  if (/purim/i.test(lower)) return { section: "Purim" };
-  if (/pesach/i.test(lower) || /seder/i.test(lower) || /hagad/i.test(lower) || /egypt/i.test(lower) || /pharoh/i.test(lower) || /shvi'i shel pesach/i.test(lower))
-    return { section: "Pesach" };
-  if (/shavuos/i.test(lower) || /sinai/i.test(lower) || /naaseh/i.test(lower)) return { section: "Shavuos" };
-  if (/tisha\s+b'?av/i.test(lower)) return { section: "Tisha B'Av" };
-  if (/seventeenth\s+of\s+tammuz/i.test(lower)) return { section: "Tisha B'Av" };
-  if (/teves/i.test(lower) || /10th of teves/i.test(lower) || /asara b'teves/i.test(lower) || /tenth of teves/i.test(lower))
-    return { section: "Asara B'Teves" };
-  if (/selichos/i.test(lower)) return { section: "Selichos" };
-  if (/teshuva/i.test(lower) || /shovavim/i.test(lower)) return { section: "Teshuva" };
-  if (/lag\s+b[ao]?m?omer/i.test(lower) || /omer/i.test(lower)) return { section: "Sefirah & Lag BaOmer" };
-  if (/rosh\s+chodesh/i.test(lower)) return { section: "Rosh Chodesh" };
+  const topic = classifyYomTovTopic(lower);
+  if (topic) return { section: topic };
 
   return { section: "General Machshava" };
+}
+
+/** Extract Yom Tov topic from standalone titles (Rosh Hashana -, Pesach -, etc.) */
+function extractYomTovSection(title: string): { section?: string; detail?: string } {
+  const lower = title.toLowerCase();
+  const topic = classifyYomTovTopic(lower);
+  return topic ? { section: topic } : { section: "General" };
 }
 
 // --- Landing page group labels ---
@@ -73,10 +92,10 @@ export const SERIES: SeriesDef[] = [
     slug: "shoftim",
     name: "Shoftim",
     description: "The Book of Shoftim — the era of the Judges and Klal Yisrael's early struggles in Eretz Yisrael.",
-    patterns: [/^Shoftim[\s,]/i],
+    patterns: [/^Shoftim[\s,:\-–]/i],
     group: "navi",
     navType: "perek",
-    extractNav: (t) => extractPerek(t, /^Shoftim[,:]?\s*/i),
+    extractNav: (t) => extractPerek(t, /^Shoftim[,:\-–]?\s*/i),
     sortDefault: "oldest",
     displayOrder: 2,
   },
@@ -118,10 +137,10 @@ export const SERIES: SeriesDef[] = [
     slug: "hilchos-yesodei-hatorah",
     name: "Hilchos Yesodei HaTorah",
     description: "Foundations of the Torah — the Rambam on the fundamentals of faith and knowledge of Hashem.",
-    patterns: [/^[Hh][Ii]lchos\s+Yesodei\s+HaTorah/i],
+    patterns: [/^[Hh][Ii]l?chos\s+Yesodei\s+HaTorah/i],
     group: "halacha",
     navType: "perek",
-    extractNav: (t) => extractPerek(t, /^[Hh][Ii]lchos\s+Yesodei\s+HaTorah[,:]?\s*/i),
+    extractNav: (t) => extractPerek(t, /^[Hh][Ii]l?chos\s+Yesodei\s+HaTorah[,:]?\s*/i),
     sortDefault: "oldest",
   },
   {
@@ -157,7 +176,7 @@ export const SERIES: SeriesDef[] = [
     slug: "halacha-series",
     name: "Halacha Series",
     description: "Practical halacha topics including Tefilla, Yom Tov, Kashrus, and seasonal halachos.",
-    patterns: [/^Halacha\s+series/i, /^Halachos\s/i],
+    patterns: [/^Halacha\s+series/i, /^Halachos\s/i, /^Halacha\s+Tefilla/i, /^[Kk]ashrus/i],
     group: "halacha",
     navType: "topic",
     extractNav: (t) => {
@@ -182,7 +201,7 @@ export const SERIES: SeriesDef[] = [
     slug: "mesilas-yesharim",
     name: "Mesilas Yesharim",
     description: "Path of the Just by Rav Moshe Chaim Luzzatto — a guide to spiritual growth and character refinement.",
-    patterns: [/^Mesill?as\s+[Yy]esho?rim/i],
+    patterns: [/^Mesill?as\s+[Yy]esh[ao]?rim/i],
     group: null,
     navType: "sequential",
     sortDefault: "oldest",
@@ -201,10 +220,10 @@ export const SERIES: SeriesDef[] = [
     slug: "shir-hashirim",
     name: "Shir Hashirim",
     description: "Song of Songs — uncovering the profound allegory of Hashem's love for Klal Yisrael.",
-    patterns: [/^Shir\s+[Hh]a?[Ss]hirim/i],
+    patterns: [/^Shir\s+[Hh]a?[Ss]hir/i],
     group: null,
     navType: "perek",
-    extractNav: (t) => extractPerek(t, /^Shir\s+[Hh]a?[Ss]hirim[ms,:]?\s*/i),
+    extractNav: (t) => extractPerek(t, /^Shir\s+[Hh]a?[Ss]hir[im]*[ms,:]?\s*/i),
     sortDefault: "oldest",
   },
   {
@@ -218,12 +237,41 @@ export const SERIES: SeriesDef[] = [
     sortDefault: "oldest",
   },
 
-  // Machshava & Mussar
+  // Yamim Tovim — ALL Yom Tov content (standalone + Machshava-prefixed)
+  // MUST come before Machshava so "Machshava series: Rosh Hashana..." goes here
+  {
+    slug: "yamim-tovim",
+    name: "Yamim Tovim",
+    description: "Shiurim on the Jewish holidays — Rosh Hashana, Yom Kippur, Sukkos, Chanuka, Purim, Pesach, Shavuos, and more.",
+    patterns: [
+      // Standalone Yom Tov titles
+      /^Rosh\s+Hashana/i,
+      /^Yom\s+Kippur/i,
+      /^Simchas\s+Torah/i,
+      /^Chanukk?a/i,
+      /^Purim/i,
+      /^Pesach/i,
+      /^Selichos/i,
+      /^Hoshana\s+Rabba/i,
+      /^Shabbos\s+(?:Shuva|Hagadol|Chol)/i,
+      /^Shv?e?i'?i\s+shel\s+/i, /^Shevi'i\s+shel\s+/i,
+      /^[Ee]ll?ul/i,
+      /^Teshuva[\s\-–:]/i,
+      /^Drasha\s+before\s+neila/i,
+      // Machshava Yom Tov titles (capture before generic ^Machshava)
+      /^Machshava\s+[\s\S]*?(?:rosh\s+hashana|shofar|tekiy|malchuyos|zichronos|yom\s+kippur|neila|kohain\s+gadol|sukk?os|hoshana|arava|simchas\s+torah|hakafos|hatkafos|koheles|chanuk|channuk|purim|pesach|seder\b|hagad|matza|egypt|pharoh|shavuos|sinai|naaseh|tisha|tammuz|teves|selichos|kinnos|teshuva|shovavim|lag\s+b|omer|rosh\s+chodesh|ellul|elul|shabbos\s+shuva|shabbos\s+hagadol)/i,
+    ],
+    group: null,
+    navType: "topic",
+    extractNav: extractYomTovSection,
+  },
+
+  // Machshava — non-Yom-Tov topics only (Yom Tov captured above)
   {
     slug: "machshava",
     name: "Machshava",
-    description: "Jewish thought and philosophy — hashkafa topics on Yamim Tovim, tefilla, and more.",
-    patterns: [/^Machshava/i],
+    description: "Jewish thought and philosophy — hashkafa, mussar, and general Torah topics.",
+    patterns: [/^Machshava/i, /^Themes\s+in\s+Torah/i, /^Topics\s+in\s+Torah/i],
     group: null,
     navType: "topic",
     extractNav: extractMachshavaTopic,
@@ -241,10 +289,10 @@ export const SERIES: SeriesDef[] = [
     slug: "ruach-chaim",
     name: "Ruach Chaim",
     description: "Rav Chaim Volozhiner's commentary on Pirkei Avos — deep insights into Torah and avodas Hashem.",
-    patterns: [/^Ruach?\s+[Cc]h?ayim/i, /^Ruach\s+[Hh]achayim/i, /^Ruach\s+[Cc]haim/i],
+    patterns: [/^Ruac?h?\s+[Cc]h?a[yi]+m/i, /^Ruach\s+[Hh]achayim/i],
     group: null,
     navType: "perek",
-    extractNav: (t) => extractPerek(t, /^Ruach?\s+[CHch]h?a[yi]+m[,:]?\s*/i),
+    extractNav: (t) => extractPerek(t, /^Ruac?h?\s+[CHch]h?a[yi]+m[,:]?\s*/i),
     sortDefault: "oldest",
   },
   {
@@ -260,15 +308,37 @@ export const SERIES: SeriesDef[] = [
     slug: "taamei-hamitzvos",
     name: "Taamei HaMitzvos",
     description: "Exploring the reasons behind the mitzvos — why Hashem commanded us.",
-    patterns: [/^T[a']+m[ae]i\s+[Hh]amitzvos/i],
+    patterns: [/^T[a',]+m[ae]i\s+[Hh]amitzvos/i],
     group: null,
     navType: "sequential",
   },
+
+  // Learning
+  {
+    slug: "learning",
+    name: "Learning",
+    description: "Torah study techniques, vaadim on how to learn, and developing skills in Gemara, mussar, and iyyun.",
+    patterns: [/^[Ll]earning/i, /^Roaring\s+to\s+learn/i, /^Siyum/i],
+    group: null,
+    navType: "sequential",
+    sortDefault: "oldest",
+  },
+
+  // Chizzuk
+  {
+    slug: "chizzuk",
+    name: "Chizzuk",
+    description: "Words of encouragement and inspiration — strengthening our avodas Hashem.",
+    patterns: [/^[Cc]hizzuk/i, /^[Cc]hazak/i],
+    group: null,
+    navType: "sequential",
+  },
+
   {
     slug: "chinuch",
     name: "Chinuch",
     description: "Torah perspectives on education and raising children.",
-    patterns: [/^Chinuch/i],
+    patterns: [/^Chinuch/i, /^Imparting\s+Jewish/i, /\bchinuch$/i],
     group: null,
     navType: "sequential",
   },
@@ -284,7 +354,7 @@ export const SERIES: SeriesDef[] = [
     slug: "tefilla",
     name: "Tefilla",
     description: "Understanding the structure, meaning, and power of prayer.",
-    patterns: [/^Tefill?ah?\s+vaad/i, /^Tefill?ah?\s+series/i, /^Tefill?ah?\s*[-–:]/i, /^Tefill?ah$/i],
+    patterns: [/^T[ae]fill?ah?\s+va'?ad/i, /^T[ae]fill?ah?\s+series/i, /^T[ae]fill?ah?\s*[-–:]/i, /^T[ae]fill?ah?\s+of\s/i, /^T[ae]fill?ah$/i, /^Thoughts\s+on.*[Tt]efill/i],
     group: null,
     navType: "sequential",
     sortDefault: "oldest",
@@ -293,7 +363,7 @@ export const SERIES: SeriesDef[] = [
     slug: "moshiach",
     name: "Moshiach",
     description: "Understanding the coming of Moshiach and the final redemption.",
-    patterns: [/^Moshiach/i],
+    patterns: [/^Moshiach/i, /Gog\s*U?magog/i, /^Travels\s+with\s+Eliyahu/i],
     group: null,
     navType: "sequential",
     sortDefault: "oldest",
@@ -313,12 +383,32 @@ export const SERIES: SeriesDef[] = [
     },
   },
 
+  // Kollel
+  {
+    slug: "kollel",
+    name: "Kollel Series",
+    description: "Special shiurim from the KBT Kollel on various Torah topics.",
+    patterns: [/^Kollel/i],
+    group: null,
+    navType: "sequential",
+  },
+
   // Special
   {
     slug: "qa",
     name: "Q & A",
     description: "Listener questions answered on a wide range of Torah topics.",
     patterns: [/^Q\s*[&]\s*A/i],
+    group: null,
+    navType: "sequential",
+  },
+
+  // Catch-all — MUST be last. Any new shiur that doesn't match above lands here.
+  {
+    slug: "other",
+    name: "Other Shiurim",
+    description: "Shiurim on various Torah topics.",
+    patterns: [/.+/],
     group: null,
     navType: "sequential",
   },
