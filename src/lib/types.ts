@@ -40,3 +40,32 @@ export interface BrowseState {
   subLevel1: string | null;
   subLevel2: string | null;
 }
+
+// --- Series system (new routing) ---
+
+export type NavType = "sequential" | "perek" | "topic" | "parsha";
+
+/** Optional grouping — only used for landing page sections */
+export type SeriesGroup = "halacha" | "navi" | null;
+
+export interface SeriesDef {
+  slug: string;
+  name: string;
+  description: string;
+  patterns: RegExp[];
+  group: SeriesGroup;
+  navType: NavType;
+  /** Extract section/detail from a title for in-page navigation */
+  extractNav?: (title: string) => { section?: string; detail?: string };
+  /** Default sort order (oldest for sequential study series) */
+  sortDefault?: SortOrder;
+}
+
+export interface SeriesStats {
+  slug: string;
+  name: string;
+  description: string;
+  group: SeriesGroup;
+  episodeCount: number;
+  latestDate: string;
+}

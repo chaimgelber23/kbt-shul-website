@@ -63,32 +63,47 @@ export default function ShiurCard({
         <span>{formatDuration(shiur.duration)}</span>
       </div>
 
-      {/* Play button */}
-      <button
-        onClick={() => onPlay(shiur)}
-        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-          isCurrent
-            ? "bg-primary text-white"
-            : "bg-primary/10 text-primary hover:bg-primary/20"
-        }`}
-      >
-        {isCurrentlyPlaying ? (
-          <>
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <rect x="6" y="4" width="4" height="16" />
-              <rect x="14" y="4" width="4" height="16" />
-            </svg>
-            Pause
-          </>
-        ) : (
-          <>
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-            {isCurrent ? "Resume" : "Play"}
-          </>
-        )}
-      </button>
+      {/* Play + Download buttons */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => onPlay(shiur)}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+            isCurrent
+              ? "bg-primary text-white"
+              : "bg-primary/10 text-primary hover:bg-primary/20"
+          }`}
+        >
+          {isCurrentlyPlaying ? (
+            <>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <rect x="6" y="4" width="4" height="16" />
+                <rect x="14" y="4" width="4" height="16" />
+              </svg>
+              Pause
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              {isCurrent ? "Resume" : "Play"}
+            </>
+          )}
+        </button>
+        <a
+          href={shiur.audioUrl}
+          download
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-navy/50 hover:text-primary hover:bg-primary/5 transition-all"
+          title="Download shiur"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Download
+        </a>
+      </div>
     </div>
   );
 }

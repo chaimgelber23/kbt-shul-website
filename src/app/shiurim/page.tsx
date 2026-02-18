@@ -1,9 +1,10 @@
+import { getLandingData } from "@/lib/seriesData";
 import { fetchAllShiurim } from "@/lib/shiurim";
 import { fetchCurrentParsha } from "@/lib/parsha";
-import ShiurimClient from "@/components/shiurim/ShiurimClient";
+import ShiurimLanding from "@/components/shiurim/ShiurimLanding";
 import type { Metadata } from "next";
 
-export const revalidate = 3600; // Re-fetch every hour
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Shiurim | Torah Lectures by Rav Dovid Steinhauer | Kahal Beis Tefilla",
@@ -12,14 +13,19 @@ export const metadata: Metadata = {
 };
 
 export default async function ShiurimPage() {
-  const [shiurim, currentParsha] = await Promise.all([
+  const [landingData, allShiurim, currentParsha] = await Promise.all([
+    getLandingData(),
     fetchAllShiurim(),
     fetchCurrentParsha(),
   ]);
 
   return (
-    <ShiurimClient
-      initialShiurim={shiurim}
+    <ShiurimLanding
+      ungrouped={landingData.ungrouped}
+      groups={landingData.groups}
+      totalCount={landingData.totalCount}
+      latestShiurim={landingData.latestShiurim}
+      allShiurim={allShiurim}
       currentParsha={currentParsha}
     />
   );
