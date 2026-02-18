@@ -127,7 +127,7 @@ export default function YahrtzeitLearningPage() {
   const shareMessage = `I wanted to share this with you \u2014 Kahal Beis Tefilla in Yerushalayim offers a special yahrtzeit learning program. A group of avreichim learn Mishnayos, Gemaras, Zohar, Tehillim, and more on the day of the yahrtzeit. You can reserve a date at: ${pageUrl}`;
 
   async function copyLink() {
-    await navigator.clipboard.writeText(pageUrl);
+    await navigator.clipboard.writeText(shareMessage);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -144,7 +144,7 @@ export default function YahrtzeitLearningPage() {
       "Yahrtzeit Learning Program \u2014 Kahal Beis Tefilla"
     );
     const body = encodeURIComponent(shareMessage);
-    window.open(`mailto:?subject=${subject}&body=${body}`);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
   }
 
   return (
