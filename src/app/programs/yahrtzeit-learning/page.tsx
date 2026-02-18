@@ -89,15 +89,6 @@ export default function YahrtzeitLearningPage() {
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  function toggleCard(index: number) {
-    setExpandedCards((prev) => {
-      const next = new Set(prev);
-      if (next.has(index)) next.delete(index);
-      else next.add(index);
-      return next;
-    });
-  }
-
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) {
@@ -316,11 +307,26 @@ export default function YahrtzeitLearningPage() {
                   key={item.title}
                   variants={fadeUp}
                   className="bg-white border border-primary/15 rounded-xl shadow-sm overflow-hidden"
+                  onMouseEnter={() =>
+                    setExpandedCards((prev) => new Set(prev).add(i))
+                  }
+                  onMouseLeave={() =>
+                    setExpandedCards((prev) => {
+                      const next = new Set(prev);
+                      next.delete(i);
+                      return next;
+                    })
+                  }
+                  onClick={() =>
+                    setExpandedCards((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(i)) next.delete(i);
+                      else next.add(i);
+                      return next;
+                    })
+                  }
                 >
-                  <button
-                    onClick={() => toggleCard(i)}
-                    className="w-full text-left p-6 hover:bg-primary/[0.02] transition-colors"
-                  >
+                  <div className="p-6 cursor-pointer sm:cursor-default">
                     <div className="flex items-start gap-4">
                       <div className="shrink-0 size-12 bg-primary/10 rounded-full flex items-center justify-center">
                         <span className="hebrew-heading text-primary text-xl font-bold">
@@ -328,32 +334,15 @@ export default function YahrtzeitLearningPage() {
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <h3 className="text-navy font-bold text-lg">
-                            {item.title}
-                          </h3>
-                          <svg
-                            className={`shrink-0 w-4 h-4 text-navy/30 transition-transform ${
-                              isOpen ? "rotate-180" : ""
-                            }`}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 9l-7 7-7-7"
-                            />
-                          </svg>
-                        </div>
+                        <h3 className="text-navy font-bold text-lg">
+                          {item.title}
+                        </h3>
                         <p className="text-navy/50 text-sm mt-1">
                           {item.short}
                         </p>
                       </div>
                     </div>
-                  </button>
+                  </div>
 
                   <AnimatePresence>
                     {isOpen && (
@@ -361,7 +350,7 @@ export default function YahrtzeitLearningPage() {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
+                        transition={{ duration: 0.2 }}
                         className="overflow-hidden"
                       >
                         <div className="px-6 pb-6 pt-0 border-t border-primary/10">
@@ -512,27 +501,29 @@ export default function YahrtzeitLearningPage() {
                 <div className="grid sm:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-navy font-semibold text-sm mb-2">
-                      Your Name
+                      Your Name *
                     </label>
                     <input
                       type="text"
                       name="nameOfDonor"
                       value={formData.nameOfDonor}
                       onChange={handleChange}
-                      placeholder="Optional"
+                      required
+                      placeholder="Your full name"
                       className="w-full px-4 py-3 rounded-xl border-2 border-navy/10 focus:border-primary focus:outline-none transition-colors bg-white"
                     />
                   </div>
                   <div>
                     <label className="block text-navy font-semibold text-sm mb-2">
-                      Email
+                      Email *
                     </label>
                     <input
                       type="email"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      placeholder="Optional"
+                      required
+                      placeholder="you@example.com"
                       className="w-full px-4 py-3 rounded-xl border-2 border-navy/10 focus:border-primary focus:outline-none transition-colors bg-white"
                     />
                   </div>
