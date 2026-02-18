@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Manrope, Playfair_Display } from "next/font/google";
+import { Manrope, Playfair_Display, Frank_Ruhl_Libre } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -15,6 +15,12 @@ const playfair = Playfair_Display({
   subsets: ["latin"],
   weight: ["400", "700"],
   style: ["normal", "italic"],
+});
+
+const frankRuhl = Frank_Ruhl_Libre({
+  variable: "--font-hebrew",
+  subsets: ["hebrew"],
+  weight: ["300", "400", "700"],
 });
 
 export const metadata: Metadata = {
@@ -40,7 +46,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${manrope.variable} ${playfair.variable} antialiased`}>
+      <body className={`${manrope.variable} ${playfair.variable} ${frankRuhl.variable} antialiased`}>
         <Navbar />
         {children}
         <Footer />

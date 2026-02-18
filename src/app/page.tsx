@@ -50,28 +50,26 @@ export default function Home() {
           variants={heroStagger}
           className="relative z-10 text-center px-6 max-w-3xl mx-auto"
         >
-          <motion.div variants={heroFadeIn}>
-            <Image
-              src="/hero-logo.png"
-              alt="Kahal Beis Tefilla"
-              width={340}
-              height={170}
-              className="mx-auto mix-blend-screen drop-shadow-[0_4px_30px_rgba(201,167,74,0.3)]"
-              priority
-              unoptimized
-            />
-          </motion.div>
+          <motion.h1 variants={heroFadeIn} className="hebrew-heading text-primary text-5xl sm:text-6xl md:text-8xl font-bold leading-tight drop-shadow-[0_2px_20px_rgba(201,167,74,0.25)]">
+            &#x05E7;&#x05D4;&#x05DC; &#x05D1;&#x05D9;&#x05EA; &#x05EA;&#x05E4;&#x05D9;&#x05DC;&#x05D4;
+          </motion.h1>
 
           <motion.div
             variants={heroSlideUp}
-            className="w-14 h-px bg-primary/50 mx-auto mt-8 mb-6"
+            className="w-14 h-px bg-primary/40 mx-auto mt-6 mb-5"
           />
 
           <motion.p
             variants={heroSlideUp}
-            className="text-white/50 text-xs sm:text-sm tracking-[0.35em] uppercase font-medium mb-12"
+            className="text-white/40 text-[11px] sm:text-xs tracking-[0.2em] uppercase font-normal mb-1"
           >
-            Ramat Eshkol &middot; Yerushalayim
+            Under the guidance of
+          </motion.p>
+          <motion.p
+            variants={heroSlideUp}
+            className="serif-heading text-white/70 text-sm sm:text-base font-normal italic mb-10"
+          >
+            Rav Dovid Steinhauer <span className="hebrew-heading not-italic">&#x05E9;&#x05DC;&#x05D9;&#x05D8;&quot;&#x05D0;</span>
           </motion.p>
 
           <motion.div

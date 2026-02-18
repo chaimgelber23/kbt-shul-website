@@ -30,3 +30,8 @@ html {
 .serif-heading {
   font-family: var(--font-serif);
 }
+
+/* Hebrew serif utility */
+.hebrew-heading {
+  font-family: var(--font-hebrew), serif;
+}
