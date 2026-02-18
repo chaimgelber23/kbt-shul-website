@@ -9,8 +9,22 @@ const fadeUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
 };
 
+const heroFadeIn = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 1.2, ease: [0.25, 0.1, 0.25, 1] as const } },
+};
+
+const heroSlideUp = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.25, 0.1, 0.25, 1] as const } },
+};
+
 const stagger = {
   visible: { transition: { staggerChildren: 0.15 } },
+};
+
+const heroStagger = {
+  visible: { transition: { staggerChildren: 0.25 } },
 };
 
 export default function Home() {
@@ -25,70 +39,59 @@ export default function Home() {
           className="object-cover"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/50 to-navy/70" />
+        {/* Cinematic gradient — light at top to show the photo, dark at bottom for text */}
+        <div className="absolute inset-0 bg-gradient-to-t from-navy/90 via-navy/30 to-navy/20" />
+        {/* Subtle radial vignette */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(27,42,74,0.5)_100%)]" />
+
         <motion.div
           initial="hidden"
           animate="visible"
-          variants={stagger}
-          className="relative z-10 text-center px-4 max-w-4xl mx-auto"
+          variants={heroStagger}
+          className="relative z-10 text-center px-6 max-w-3xl mx-auto"
         >
-          <motion.div variants={fadeUp} className="mb-6">
+          <motion.div variants={heroFadeIn}>
             <Image
               src="/hero-logo.png"
-              alt="Kahal Beis Tefilla Logo"
-              width={420}
-              height={210}
-              className="mx-auto drop-shadow-2xl opacity-90 mix-blend-screen"
+              alt="Kahal Beis Tefilla"
+              width={340}
+              height={170}
+              className="mx-auto mix-blend-screen drop-shadow-[0_4px_30px_rgba(201,167,74,0.3)]"
               priority
               unoptimized
             />
           </motion.div>
-          <motion.h1
-            variants={fadeUp}
-            className="serif-heading text-primary text-5xl md:text-7xl font-bold mb-6 drop-shadow-lg"
-          >
-            Kahal Beis Tefilla
-          </motion.h1>
-          <motion.p
-            variants={fadeUp}
-            className="text-white/90 text-lg md:text-2xl font-light mb-10 tracking-wide max-w-2xl mx-auto drop-shadow-md"
-          >
-            Growing Together in Torah &amp; Avodas Hashem in the Heart of
-            Jerusalem
-          </motion.p>
+
           <motion.div
-            variants={fadeUp}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            variants={heroSlideUp}
+            className="w-14 h-px bg-primary/50 mx-auto mt-8 mb-6"
+          />
+
+          <motion.p
+            variants={heroSlideUp}
+            className="text-white/50 text-xs sm:text-sm tracking-[0.35em] uppercase font-medium mb-12"
           >
-            <Link
-              href="/about"
-              className="w-full sm:w-auto bg-primary text-navy px-10 py-4 rounded-xl font-bold text-lg hover:bg-primary-light transition-all shadow-xl text-center"
-            >
-              Learn About Us
-            </Link>
+            Ramat Eshkol &middot; Yerushalayim
+          </motion.p>
+
+          <motion.div
+            variants={heroSlideUp}
+            className="flex items-center justify-center gap-6"
+          >
             <Link
               href="/davening"
-              className="w-full sm:w-auto border-2 border-white/30 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-white/10 transition-all backdrop-blur-sm text-center"
+              className="border border-primary/40 text-primary px-8 py-3 text-xs sm:text-sm tracking-[0.2em] uppercase font-semibold hover:bg-primary/10 hover:border-primary/60 transition-all duration-300"
             >
-              View Schedule
+              Davening Times
+            </Link>
+            <Link
+              href="/about"
+              className="text-white/50 text-xs sm:text-sm tracking-[0.2em] uppercase font-medium hover:text-white/80 transition-colors duration-300"
+            >
+              About Us
             </Link>
           </motion.div>
         </motion.div>
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/40 animate-bounce">
-          <svg
-            className="w-8 h-8"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-        </div>
       </section>
 
       {/* Welcome Section */}
