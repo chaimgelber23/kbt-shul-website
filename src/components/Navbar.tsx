@@ -39,18 +39,10 @@ export default function Navbar() {
           <Image
             src="/logo.png"
             alt="Kahal Beis Tefilla"
-            width={120}
+            width={240}
             height={120}
-            className="h-16 md:h-20 w-auto"
+            className="h-12 md:h-14 w-auto"
           />
-          <div>
-            <h1 className="text-navy text-xl font-extrabold leading-none tracking-tight">
-              KAHAL BEIS
-            </h1>
-            <p className="text-primary text-[10px] font-bold tracking-[0.2em] uppercase">
-              Tefilla Jerusalem
-            </p>
-          </div>
         </Link>
 
         {/* Desktop Nav */}
