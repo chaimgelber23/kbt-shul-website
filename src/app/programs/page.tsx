@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 
 const fadeUp = {
@@ -98,6 +99,20 @@ export default function ProgramsPage() {
               title="Erev Shabbos Seder"
               description="Special learning programs every Friday"
             />
+            <Link href="/programs/yahrtzeit-learning" className="group">
+              <div className="bg-white border-2 border-primary/25 rounded-xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+                <h4 className="text-navy font-bold text-lg mb-2 group-hover:text-primary transition-colors">
+                  Yahrtzeit Learning
+                </h4>
+                <p className="text-navy/60 text-sm">
+                  Reserve a day of dedicated Torah learning for a loved
+                  one&apos;s yahrtzeit
+                </p>
+                <span className="inline-flex items-center gap-1 text-primary text-sm font-semibold mt-3 group-hover:gap-2 transition-all">
+                  Learn more &#x2192;
+                </span>
+              </div>
+            </Link>
           </motion.div>
         </div>
       </motion.section>
