@@ -18,24 +18,27 @@ export default function Home() {
     <main>
       {/* Hero Section */}
       <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden bg-navy">
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-30"
-          style={{ backgroundImage: "url('/hero-bg.jpg')" }}
+        <Image
+          src="/pictures/shul-davening-wide.jpg"
+          alt="Kehillas Bais Tefilla during davening"
+          fill
+          className="object-cover"
+          priority
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/60 to-navy/80" />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/50 to-navy/70" />
         <motion.div
           initial="hidden"
           animate="visible"
           variants={stagger}
           className="relative z-10 text-center px-4 max-w-4xl mx-auto"
         >
-          <motion.div variants={fadeUp} className="mb-8">
+          <motion.div variants={fadeUp} className="mb-6">
             <Image
               src="/hero-logo.png"
               alt="Kahal Beis Tefilla Logo"
-              width={400}
-              height={200}
-              className="mx-auto drop-shadow-2xl"
+              width={420}
+              height={210}
+              className="mx-auto drop-shadow-2xl opacity-90 mix-blend-screen"
               priority
               unoptimized
             />
@@ -48,7 +51,7 @@ export default function Home() {
           </motion.h1>
           <motion.p
             variants={fadeUp}
-            className="text-white/90 text-lg md:text-2xl font-light mb-10 tracking-wide max-w-2xl mx-auto"
+            className="text-white/90 text-lg md:text-2xl font-light mb-10 tracking-wide max-w-2xl mx-auto drop-shadow-md"
           >
             Growing Together in Torah &amp; Avodas Hashem in the Heart of
             Jerusalem
@@ -130,8 +133,8 @@ export default function Home() {
         className="relative h-72 md:h-96 overflow-hidden"
       >
         <Image
-          src="/community-gathering.jpg"
-          alt="A community gathering at Kahal Beis Tefilla"
+          src="/pictures/community-seudah.jpg"
+          alt="Community gathering and seudah at Kahal Beis Tefilla"
           fill
           className="object-cover"
         />
@@ -227,25 +230,25 @@ export default function Home() {
               title="Torah Learning"
               description="Daily Gemara shiurim, Halacha classes, and two full-day kollelim for all levels. Our Beis Medrash is vibrant from early morning until late at night."
               href="/programs#torah"
-              gradient="from-navy/80 to-navy/40"
+              image="/pictures/beis-medrash-learning.jpg"
             />
             <ProgramCard
               title="Community Events"
               description="Weekly kiddushim, Shabbatonim, holiday celebrations for Chanukah, Purim, Lag BaOmer, Sukkos, and communal siyumim throughout the year."
               href="/programs#community"
-              gradient="from-primary/60 to-navy/40"
+              image="/pictures/community-speaker.jpg"
             />
             <ProgramCard
               title="Women &amp; Youth"
               description="Women's shiurim, girls' Tehillim groups, and popular youth programs including Avos Ubanim and Masmidim for boys."
               href="/programs#youth"
-              gradient="from-navy/70 to-primary/30"
+              image="/pictures/youth-program.jpg"
             />
             <ProgramCard
               title="Chesed"
               description="Supporting families with simchos, babysitting, hospital visits, medical networking, and our active tzedakah fund and gemach."
               href="/programs#chesed"
-              gradient="from-primary/50 to-navy/50"
+              image="/pictures/avos-ubanim-closeup.jpg"
             />
           </div>
         </div>
@@ -253,6 +256,12 @@ export default function Home() {
 
       {/* Inspirational Quote */}
       <section className="py-32 px-6 bg-navy relative overflow-hidden text-center">
+        <Image
+          src="/pictures/shul-davening-crowd.jpg"
+          alt="Davening at Kahal Beis Tefilla"
+          fill
+          className="object-cover opacity-15"
+        />
         <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
           <span className="text-[300px] absolute -top-20 -left-20 text-white leading-none select-none">
             &ldquo;
@@ -283,24 +292,32 @@ export default function Home() {
         variants={fadeUp}
         className="py-20 px-6 bg-primary/10"
       >
-        <div className="max-w-7xl mx-auto bg-white rounded-3xl p-10 md:p-20 shadow-xl border border-primary/20 flex flex-col md:flex-row items-center justify-between gap-12">
-          <div className="max-w-xl">
+        <div className="max-w-7xl mx-auto bg-white rounded-3xl shadow-xl border border-primary/20 overflow-hidden flex flex-col md:flex-row items-stretch">
+          <div className="relative hidden md:block md:w-2/5">
+            <Image
+              src="/pictures/beis-medrash-doorway.jpg"
+              alt="Torah learning at Kahal Beis Tefilla"
+              fill
+              className="object-cover"
+            />
+          </div>
+          <div className="flex-1 p-10 md:p-16 flex flex-col justify-center">
             <h2 className="serif-heading text-navy text-4xl font-bold mb-4">
               Support Our Sanctuary
             </h2>
-            <p className="text-navy/70 text-lg leading-relaxed">
+            <p className="text-navy/70 text-lg leading-relaxed mb-8">
               Kahal Beis Tefilla relies on the generosity of our members and
               friends. Your contributions directly support our daily operations,
               kollelim, shiurim, and community chesed programs.
             </p>
-          </div>
-          <div className="shrink-0">
-            <Link
-              href="/donate"
-              className="bg-primary text-navy px-12 py-5 rounded-xl font-bold text-xl hover:shadow-lg hover:-translate-y-1 transition-all inline-flex items-center gap-3"
-            >
-              Donate Now
-            </Link>
+            <div>
+              <Link
+                href="/donate"
+                className="bg-primary text-navy px-12 py-5 rounded-xl font-bold text-xl hover:shadow-lg hover:-translate-y-1 transition-all inline-flex items-center gap-3"
+              >
+                Donate Now
+              </Link>
+            </div>
           </div>
         </div>
       </motion.section>
@@ -321,26 +338,29 @@ function ProgramCard({
   title,
   description,
   href,
-  gradient,
+  image,
 }: {
   title: string;
   description: string;
   href: string;
-  gradient: string;
+  image: string;
 }) {
   return (
     <motion.div variants={fadeUp}>
       <Link href={href}>
         <div className="relative h-80 rounded-2xl overflow-hidden group cursor-pointer shadow-lg">
-          <div
-            className={`absolute inset-0 bg-gradient-to-br ${gradient} transition-all duration-500`}
+          <Image
+            src={image}
+            alt={title}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-700"
           />
-          <div className="absolute inset-0 bg-navy/20 group-hover:bg-navy/10 transition-colors" />
+          <div className="absolute inset-0 bg-gradient-to-t from-navy/90 via-navy/40 to-navy/10 group-hover:from-navy/80 group-hover:via-navy/30 transition-all duration-500" />
           <div className="absolute inset-x-0 bottom-0 p-8 translate-y-4 group-hover:translate-y-0 transition-transform">
-            <h3 className="serif-heading text-white text-3xl font-bold mb-2">
+            <h3 className="serif-heading text-white text-3xl font-bold mb-2 drop-shadow-lg">
               {title}
             </h3>
-            <p className="text-white/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <p className="text-white/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-md">
               {description}
             </p>
             <div className="w-12 h-1 bg-primary mt-4" />
