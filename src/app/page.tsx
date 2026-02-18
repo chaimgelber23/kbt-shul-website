@@ -33,8 +33,8 @@ export default function Home() {
             <Image
               src="/logo.png"
               alt="Kahal Beis Tefilla Logo"
-              width={450}
-              height={320}
+              width={320}
+              height={160}
               className="mx-auto drop-shadow-2xl"
               priority
             />
