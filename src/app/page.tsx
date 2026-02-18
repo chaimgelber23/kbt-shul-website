@@ -37,6 +37,7 @@ export default function Home() {
               height={160}
               className="mx-auto drop-shadow-2xl"
               priority
+              unoptimized
             />
           </motion.div>
           <motion.h1
