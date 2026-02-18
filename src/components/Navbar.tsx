@@ -9,9 +9,9 @@ import { motion, AnimatePresence } from "framer-motion";
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
-  { href: "/davening", label: "Davening Times" },
   { href: "/programs", label: "Programs" },
   { href: "/shiurim", label: "Shiurim", hasDropdown: true },
+  { href: "/programs/yahrtzeit-learning", label: "Yahrtzeit Learning" },
   { href: "/membership", label: "Membership" },
   { href: "/donate", label: "Donate", accent: true },
 ];
@@ -87,7 +87,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-8">
+        <nav className="hidden lg:flex items-center gap-7">
           {navLinks.map((link) =>
             link.hasDropdown ? (
               <div key={link.href} className="relative" ref={dropdownRef}>
@@ -182,7 +182,7 @@ export default function Navbar() {
         <div className="flex items-center gap-4">
           <Link
             href="/contact"
-            className="hidden sm:flex bg-primary text-navy px-6 py-2 rounded-lg font-bold text-sm hover:brightness-105 transition-all shadow-sm"
+            className="hidden lg:flex bg-primary text-navy px-6 py-2 rounded-lg font-bold text-sm hover:brightness-105 transition-all shadow-sm"
           >
             Contact
           </Link>
