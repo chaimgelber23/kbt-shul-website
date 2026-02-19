@@ -421,7 +421,7 @@ export default function YahrtzeitLearningPage() {
                     Registration Successful
                   </h3>
                   <p className="text-navy/70 text-lg mb-4">
-                    Someone will email you to confirm before the yahrtzeit.
+                    We will email you to confirm before the yahrtzeit.
                   </p>
                   <p className="text-navy/50 text-sm">
                     Payment will only be requested after the learning has been
