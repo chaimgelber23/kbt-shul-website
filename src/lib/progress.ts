@@ -1,4 +1,6 @@
 import type { Shiur } from "./types";
+import { doc, setDoc, getDoc, collection, getDocs } from "firebase/firestore";
+import { db, auth } from "./firebase";
 
 export interface ShiurProgress {
   shiurId: string;
@@ -19,6 +21,90 @@ export interface SeriesProgress {
 const PROGRESS_KEY = "kbt-shiurim-progress";
 const SERIES_PROGRESS_KEY = "kbt-series-progress";
 
+// Firestore sync functions
+async function syncProgressToFirestore(progress: ShiurProgress): Promise<void> {
+  if (!auth.currentUser) return;
+
+  try {
+    const docRef = doc(db, "users", auth.currentUser.uid, "progress", progress.shiurId);
+    await setDoc(docRef, progress, { merge: true });
+  } catch (error) {
+    console.error("Failed to sync progress to Firestore:", error);
+  }
+}
+
+async function syncSeriesProgressToFirestore(seriesProgress: SeriesProgress): Promise<void> {
+  if (!auth.currentUser) return;
+
+  try {
+    const docRef = doc(db, "users", auth.currentUser.uid, "seriesProgress", seriesProgress.seriesSlug);
+    await setDoc(docRef, seriesProgress, { merge: true });
+  } catch (error) {
+    console.error("Failed to sync series progress to Firestore:", error);
+  }
+}
+
+export async function loadProgressFromFirestore(): Promise<void> {
+  if (!auth.currentUser) return;
+
+  try {
+    // Load shiur progress
+    const progressCol = collection(db, "users", auth.currentUser.uid, "progress");
+    const progressSnapshot = await getDocs(progressCol);
+    const cloudProgress: Record<string, ShiurProgress> = {};
+    progressSnapshot.forEach((doc) => {
+      cloudProgress[doc.id] = doc.data() as ShiurProgress;
+    });
+
+    // Merge with local progress (keep most recent)
+    const localProgress = getAllProgress();
+    const mergedProgress: Record<string, ShiurProgress> = { ...cloudProgress };
+
+    Object.entries(localProgress).forEach(([id, local]) => {
+      const cloud = cloudProgress[id];
+      if (!cloud || new Date(local.lastListened) > new Date(cloud.lastListened)) {
+        mergedProgress[id] = local;
+      }
+    });
+
+    // Save merged progress back to localStorage
+    if (typeof window !== "undefined") {
+      localStorage.setItem(PROGRESS_KEY, JSON.stringify(mergedProgress));
+    }
+
+    // Load series progress
+    const seriesCol = collection(db, "users", auth.currentUser.uid, "seriesProgress");
+    const seriesSnapshot = await getDocs(seriesCol);
+    const cloudSeriesProgress: Record<string, SeriesProgress> = {};
+    seriesSnapshot.forEach((doc) => {
+      cloudSeriesProgress[doc.id] = doc.data() as SeriesProgress;
+    });
+
+    // Merge series progress
+    const localSeriesData = typeof window !== "undefined"
+      ? localStorage.getItem(SERIES_PROGRESS_KEY)
+      : null;
+    const localSeriesProgress: Record<string, SeriesProgress> = localSeriesData
+      ? JSON.parse(localSeriesData)
+      : {};
+    const mergedSeriesProgress: Record<string, SeriesProgress> = { ...cloudSeriesProgress };
+
+    Object.entries(localSeriesProgress).forEach(([slug, local]) => {
+      const cloud = cloudSeriesProgress[slug];
+      if (!cloud || new Date(local.lastListened) > new Date(cloud.lastListened)) {
+        mergedSeriesProgress[slug] = local;
+      }
+    });
+
+    // Save merged series progress
+    if (typeof window !== "undefined") {
+      localStorage.setItem(SERIES_PROGRESS_KEY, JSON.stringify(mergedSeriesProgress));
+    }
+  } catch (error) {
+    console.error("Failed to load progress from Firestore:", error);
+  }
+}
+
 export function getShiurProgress(shiurId: string): ShiurProgress | null {
   if (typeof window === "undefined") return null;
   try {
@@ -36,11 +122,15 @@ export function saveShiurProgress(progress: ShiurProgress): void {
   try {
     const data = localStorage.getItem(PROGRESS_KEY);
     const allProgress: Record<string, ShiurProgress> = data ? JSON.parse(data) : {};
-    allProgress[progress.shiurId] = {
+    const updatedProgress = {
       ...progress,
       lastListened: new Date().toISOString(),
     };
+    allProgress[progress.shiurId] = updatedProgress;
     localStorage.setItem(PROGRESS_KEY, JSON.stringify(allProgress));
+
+    // Sync to Firestore if user is authenticated
+    syncProgressToFirestore(updatedProgress);
   } catch (e) {
     console.error("Failed to save shiur progress:", e);
   }
@@ -64,13 +154,17 @@ export function saveSeriesProgress(seriesSlug: string, shiurId: string): void {
     const data = localStorage.getItem(SERIES_PROGRESS_KEY);
     const allProgress: Record<string, SeriesProgress> = data ? JSON.parse(data) : {};
     const current = allProgress[seriesSlug];
-    allProgress[seriesSlug] = {
+    const updatedProgress = {
       seriesSlug,
       lastShiurId: shiurId,
       lastListened: new Date().toISOString(),
       totalListened: current ? current.totalListened + 1 : 1,
     };
+    allProgress[seriesSlug] = updatedProgress;
     localStorage.setItem(SERIES_PROGRESS_KEY, JSON.stringify(allProgress));
+
+    // Sync to Firestore if user is authenticated
+    syncSeriesProgressToFirestore(updatedProgress);
   } catch (e) {
     console.error("Failed to save series progress:", e);
   }

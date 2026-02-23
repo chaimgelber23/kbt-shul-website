@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "./AuthProvider";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -42,6 +43,7 @@ export default function Navbar() {
   const [mobileShiurimOpen, setMobileShiurimOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const { user, signInWithGoogle, signOut } = useAuth();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -179,7 +181,7 @@ export default function Navbar() {
           )}
         </nav>
 
-        {/* Contact Button + Mobile Toggle */}
+        {/* Contact Button + Auth + Mobile Toggle */}
         <div className="flex items-center gap-4">
           <Link
             href="/contact"
@@ -187,6 +189,29 @@ export default function Navbar() {
           >
             Contact
           </Link>
+          {user ? (
+            <button
+              onClick={() => signOut()}
+              className="hidden lg:flex items-center gap-2 text-navy hover:text-primary transition-colors text-sm font-semibold"
+            >
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-xs font-bold text-primary">
+                  {user.displayName?.charAt(0) || user.email?.charAt(0) || "U"}
+                </span>
+              </div>
+              Sign Out
+            </button>
+          ) : (
+            <button
+              onClick={() => signInWithGoogle()}
+              className="hidden lg:flex items-center gap-2 text-navy hover:text-primary transition-colors text-sm font-semibold"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+              </svg>
+              Sign In
+            </button>
+          )}
           <button
             className="lg:hidden text-navy"
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -307,6 +332,35 @@ export default function Navbar() {
               >
                 Contact
               </Link>
+              {user ? (
+                <button
+                  onClick={() => {
+                    signOut();
+                    setMobileOpen(false);
+                  }}
+                  className="flex items-center gap-2 text-navy text-sm font-semibold"
+                >
+                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                    <span className="text-xs font-bold text-primary">
+                      {user.displayName?.charAt(0) || user.email?.charAt(0) || "U"}
+                    </span>
+                  </div>
+                  Sign Out
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    signInWithGoogle();
+                    setMobileOpen(false);
+                  }}
+                  className="flex items-center gap-2 text-navy text-sm font-semibold"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                  </svg>
+                  Sign In
+                </button>
+              )}
             </div>
           </motion.nav>
         )}
