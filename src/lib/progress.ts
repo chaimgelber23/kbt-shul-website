@@ -23,7 +23,8 @@ const SERIES_PROGRESS_KEY = "kbt-series-progress";
 
 // Firestore sync functions
 async function syncProgressToFirestore(progress: ShiurProgress): Promise<void> {
-  if (!auth.currentUser) return;
+  // Only sync on client side when user is authenticated
+  if (typeof window === "undefined" || !auth || !db || !auth.currentUser) return;
 
   try {
     const docRef = doc(db, "users", auth.currentUser.uid, "progress", progress.shiurId);
@@ -34,7 +35,8 @@ async function syncProgressToFirestore(progress: ShiurProgress): Promise<void> {
 }
 
 async function syncSeriesProgressToFirestore(seriesProgress: SeriesProgress): Promise<void> {
-  if (!auth.currentUser) return;
+  // Only sync on client side when user is authenticated
+  if (typeof window === "undefined" || !auth || !db || !auth.currentUser) return;
 
   try {
     const docRef = doc(db, "users", auth.currentUser.uid, "seriesProgress", seriesProgress.seriesSlug);
@@ -45,7 +47,8 @@ async function syncSeriesProgressToFirestore(seriesProgress: SeriesProgress): Pr
 }
 
 export async function loadProgressFromFirestore(): Promise<void> {
-  if (!auth.currentUser) return;
+  // Only load on client side when user is authenticated
+  if (typeof window === "undefined" || !auth || !db || !auth.currentUser) return;
 
   try {
     // Load shiur progress

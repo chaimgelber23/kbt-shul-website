@@ -34,6 +34,12 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Only set up auth listener on client side
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
 
@@ -49,6 +55,10 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const signInWithGoogle = async () => {
+    if (!auth) {
+      console.error("Firebase Auth not initialized");
+      return;
+    }
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
@@ -59,6 +69,10 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   };
 
   const signOut = async () => {
+    if (!auth) {
+      console.error("Firebase Auth not initialized");
+      return;
+    }
     try {
       await firebaseSignOut(auth);
     } catch (error) {
