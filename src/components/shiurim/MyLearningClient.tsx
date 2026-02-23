@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useUser } from "@clerk/nextjs";
+// import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import {
   getAllProgress,
@@ -32,7 +32,7 @@ interface SeriesWithProgress {
 }
 
 export default function MyLearningClient() {
-  const { isSignedIn, user } = useUser();
+  // const { isSignedIn, user } = useUser();
   const [inProgressSeries, setInProgressSeries] = useState<SeriesWithProgress[]>([]);
   const [recentShiurim, setRecentShiurim] = useState<ShiurProgress[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,32 +94,13 @@ export default function MyLearningClient() {
     setLoading(false);
   }, []);
 
-  if (!isSignedIn) {
-    return (
-      <main className="min-h-screen bg-bg-light py-20">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h1 className="text-4xl font-bold text-navy mb-4">My Learning</h1>
-          <p className="text-navy/60 text-lg mb-8">
-            Sign in to track your Torah learning journey
-          </p>
-          <Link
-            href="/sign-in"
-            className="inline-block bg-primary text-white px-8 py-3 rounded-xl font-semibold hover:bg-primary-light transition-colors"
-          >
-            Sign In
-          </Link>
-        </div>
-      </main>
-    );
-  }
-
   return (
     <main className="min-h-screen bg-bg-light">
       {/* Hero */}
       <section className="bg-gradient-to-br from-navy to-navy-light text-white py-16 px-6">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Welcome back, {user?.firstName || ""}
+            My Learning
           </h1>
           <p className="text-white/80 text-lg">
             Continue your Torah learning journey
