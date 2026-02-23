@@ -10,10 +10,15 @@ import {
   type ReactNode,
 } from "react";
 import type { Shiur, PlayerState } from "@/lib/types";
+import {
+  getShiurProgress,
+  saveShiurProgress,
+  saveSeriesProgress,
+} from "@/lib/progress";
 
 interface AudioPlayerContextType {
   playerState: PlayerState;
-  playShiur: (shiur: Shiur) => void;
+  playShiur: (shiur: Shiur, startFromBeginning?: boolean, seriesSlug?: string, nextShiur?: Shiur | null) => void;
   togglePlayPause: () => void;
   seek: (time: number) => void;
   setPlaybackRate: (rate: number) => void;
@@ -39,6 +44,9 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   });
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const nextShiurRef = useRef<Shiur | null>(null);
+  const seriesSlugRef = useRef<string | null>(null);
+  const progressSaveIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Create audio element once on mount
   useEffect(() => {
@@ -52,8 +60,44 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       setPlayerState((p) => ({ ...p, currentTime: audio.currentTime }));
     const onDurationChange = () =>
       setPlayerState((p) => ({ ...p, duration: audio.duration || 0 }));
-    const onEnded = () =>
+    const onEnded = () => {
       setPlayerState((p) => ({ ...p, isPlaying: false, currentTime: 0 }));
+
+      // Mark current shiur as completed
+      if (playerState.currentShiur) {
+        saveShiurProgress({
+          shiurId: playerState.currentShiur.id,
+          seriesSlug: seriesSlugRef.current || undefined,
+          currentTime: audio.duration || 0,
+          duration: audio.duration || 0,
+          lastListened: new Date().toISOString(),
+          completed: true,
+        });
+
+        // Save series progress
+        if (seriesSlugRef.current) {
+          saveSeriesProgress(seriesSlugRef.current, playerState.currentShiur.id);
+        }
+      }
+
+      // Auto-advance to next shiur if available
+      if (nextShiurRef.current) {
+        const nextShiur = nextShiurRef.current;
+        setTimeout(() => {
+          if (audioRef.current) {
+            audioRef.current.src = nextShiur.audioUrl;
+            audioRef.current.currentTime = 0;
+            audioRef.current.play();
+            setPlayerState((prev) => ({
+              ...prev,
+              currentShiur: nextShiur,
+              isPlaying: true,
+              currentTime: 0,
+            }));
+          }
+        }, 1500); // Small delay before auto-advancing
+      }
+    };
 
     audio.addEventListener("play", onPlay);
     audio.addEventListener("pause", onPause);
@@ -70,12 +114,64 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       audio.pause();
       audio.src = "";
     };
-  }, []);
+  }, [playerState.currentShiur]);
+
+  // Periodic progress saving (every 5 seconds when playing)
+  useEffect(() => {
+    if (playerState.isPlaying && playerState.currentShiur && playerState.duration > 0) {
+      // Clear any existing interval
+      if (progressSaveIntervalRef.current) {
+        clearInterval(progressSaveIntervalRef.current);
+      }
+
+      // Save progress every 5 seconds
+      progressSaveIntervalRef.current = setInterval(() => {
+        const audio = audioRef.current;
+        if (audio && playerState.currentShiur) {
+          const currentTime = audio.currentTime;
+          const duration = audio.duration;
+
+          // Consider completed if within last 30 seconds
+          const completed = duration - currentTime < 30;
+
+          saveShiurProgress({
+            shiurId: playerState.currentShiur.id,
+            seriesSlug: seriesSlugRef.current || undefined,
+            currentTime,
+            duration,
+            lastListened: new Date().toISOString(),
+            completed,
+          });
+
+          // Update series progress
+          if (seriesSlugRef.current) {
+            saveSeriesProgress(seriesSlugRef.current, playerState.currentShiur.id);
+          }
+        }
+      }, 5000);
+    } else {
+      // Clear interval when paused or stopped
+      if (progressSaveIntervalRef.current) {
+        clearInterval(progressSaveIntervalRef.current);
+        progressSaveIntervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (progressSaveIntervalRef.current) {
+        clearInterval(progressSaveIntervalRef.current);
+      }
+    };
+  }, [playerState.isPlaying, playerState.currentShiur, playerState.duration]);
 
   const playShiur = useCallback(
-    (shiur: Shiur) => {
+    (shiur: Shiur, startFromBeginning = false, seriesSlug?: string, nextShiur?: Shiur | null) => {
       const audio = audioRef.current;
       if (!audio) return;
+
+      // Store series context and next shiur for auto-advance
+      seriesSlugRef.current = seriesSlug || null;
+      nextShiurRef.current = nextShiur || null;
 
       if (playerState.currentShiur?.id === shiur.id) {
         if (audio.paused) {
@@ -85,12 +181,19 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
         }
       } else {
         audio.src = shiur.audioUrl;
+
+        // Load saved progress unless explicitly starting from beginning
+        const savedProgress = !startFromBeginning ? getShiurProgress(shiur.id) : null;
+        const startTime = savedProgress && !savedProgress.completed ? savedProgress.currentTime : 0;
+
+        audio.currentTime = startTime;
         audio.play();
+
         setPlayerState((prev) => ({
           ...prev,
           currentShiur: shiur,
           isPlaying: true,
-          currentTime: 0,
+          currentTime: startTime,
         }));
       }
     },

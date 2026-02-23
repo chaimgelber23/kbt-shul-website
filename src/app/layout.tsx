@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Manrope, Playfair_Display, Frank_Ruhl_Libre } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
+import { ClerkProvider } from "@clerk/nextjs";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -46,13 +47,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${manrope.variable} ${playfair.variable} ${frankRuhl.variable} antialiased`}>
-        <Navbar />
-        {children}
-        <Footer />
-        <Analytics />
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body className={`${manrope.variable} ${playfair.variable} ${frankRuhl.variable} antialiased`}>
+          <Navbar />
+          {children}
+          <Footer />
+          <Analytics />
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

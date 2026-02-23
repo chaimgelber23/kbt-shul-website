@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import type { Shiur, SortOrder, NavType, SeriesGroup } from "@/lib/types";
 import { PARSHIYOS_BY_SEFER } from "@/lib/categoryConfig";
 import { useAudioPlayer } from "./AudioPlayerProvider";
+import { getRecommendedShiur, getNextShiur } from "@/lib/progress";
 import SeriesHero from "./SeriesHero";
 import ShiurCard from "./ShiurCard";
 
@@ -42,6 +43,11 @@ export default function SeriesPageClient({
   const [selectedSubSection, setSelectedSubSection] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const { playShiur, playerState } = useAudioPlayer();
+
+  // Get recommended shiur based on progress
+  const recommendedShiur = useMemo(() => {
+    return getRecommendedShiur(series.slug, shiurim);
+  }, [series.slug, shiurim]);
 
   // For parsha: need the parsha names within a sefer
   const parshaSubSections = useMemo(() => {
@@ -125,8 +131,29 @@ export default function SeriesPageClient({
 
       <section className="py-12 px-6 bg-bg-light">
         <div className="max-w-6xl mx-auto">
-          {/* Start from Beginning / Latest buttons */}
+          {/* Action buttons - only show Resume if user has started */}
           <div className="flex flex-wrap items-center gap-3 mb-8">
+            {/* Resume button - ONLY shown if there's actual progress */}
+            {recommendedShiur.lastListenedShiur && (
+              <button
+                onClick={() => {
+                  const shiurToPlay = recommendedShiur.shouldResume
+                    ? recommendedShiur.shiur
+                    : (recommendedShiur.shiur || recommendedShiur.lastListenedShiur);
+                  if (!shiurToPlay) return;
+                  const nextShiur = getNextShiur(shiurim, shiurToPlay.id);
+                  playShiur(shiurToPlay, false, series.slug, nextShiur);
+                }}
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-primary text-white shadow-md hover:bg-primary-light transition-all flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+                {recommendedShiur.shouldResume ? "Resume" : "Continue"} in {series.name}
+              </button>
+            )}
+
+            {/* Sort/Filter buttons */}
             <button
               onClick={() => { setSortOrder("oldest"); handleSectionChange(null); }}
               className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
@@ -320,19 +347,22 @@ export default function SeriesPageClient({
             variants={stagger}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
           >
-            {visible.map((shiur) => (
-              <motion.div key={shiur.id} variants={fadeUp}>
-                <ShiurCard
-                  shiur={shiur}
-                  onPlay={playShiur}
-                  isCurrentlyPlaying={
-                    playerState.currentShiur?.id === shiur.id &&
-                    playerState.isPlaying
-                  }
-                  isCurrent={playerState.currentShiur?.id === shiur.id}
-                />
-              </motion.div>
-            ))}
+            {visible.map((shiur) => {
+              const nextShiur = getNextShiur(filteredShiurim, shiur.id);
+              return (
+                <motion.div key={shiur.id} variants={fadeUp}>
+                  <ShiurCard
+                    shiur={shiur}
+                    onPlay={(s) => playShiur(s, false, series.slug, nextShiur)}
+                    isCurrentlyPlaying={
+                      playerState.currentShiur?.id === shiur.id &&
+                      playerState.isPlaying
+                    }
+                    isCurrent={playerState.currentShiur?.id === shiur.id}
+                  />
+                </motion.div>
+              );
+            })}
           </motion.div>
 
           {/* Empty state */}

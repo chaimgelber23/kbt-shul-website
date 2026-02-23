@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { SeriesStats } from "@/lib/types";
+import { getSeriesProgress } from "@/lib/progress";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -18,19 +20,44 @@ function formatDate(iso: string): string {
 }
 
 export default function SeriesCard({ series }: { series: SeriesStats }) {
+  const [hasProgress, setHasProgress] = useState(false);
+  const [listenedCount, setListenedCount] = useState(0);
+
+  useEffect(() => {
+    const progress = getSeriesProgress(series.slug);
+    if (progress) {
+      setHasProgress(true);
+      setListenedCount(progress.totalListened);
+    }
+  }, [series.slug]);
+
   return (
     <motion.div variants={fadeUp}>
       <Link href={`/shiurim/${series.slug}`} className="block h-full">
         <div className="bg-white border border-primary/15 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all group h-full flex flex-col">
-          <h3 className="text-navy font-bold text-lg group-hover:text-primary transition-colors">
-            {series.name}
-          </h3>
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <h3 className="text-navy font-bold text-lg group-hover:text-primary transition-colors flex-1">
+              {series.name}
+            </h3>
+            {hasProgress && (
+              <span className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-semibold rounded-full px-2.5 py-1 shrink-0">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+                In Progress
+              </span>
+            )}
+          </div>
           <p className="text-navy/50 text-sm mt-1 line-clamp-2 flex-1">
             {series.description}
           </p>
           <div className="flex items-center justify-between mt-4 pt-3 border-t border-primary/10">
             <span className="text-primary font-semibold text-sm">
-              {series.episodeCount} shiur{series.episodeCount !== 1 ? "im" : ""}
+              {hasProgress && listenedCount > 0 ? (
+                <>{listenedCount}/{series.episodeCount} listened</>
+              ) : (
+                <>{series.episodeCount} shiur{series.episodeCount !== 1 ? "im" : ""}</>
+              )}
             </span>
             <span className="text-navy/40 text-xs">
               Latest: {formatDate(series.latestDate)}

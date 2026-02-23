@@ -172,9 +172,7 @@ export default function Home() {
                   <Sun /> Shacharis
                 </h3>
                 <ul className="space-y-3 text-navy font-medium">
-                  <ScheduleItem label="Vasikin" time="At Sunrise" />
-                  <ScheduleItem label="First Minyan" time="7:00 AM" />
-                  <ScheduleItem label="Second Minyan" time="8:15 AM" />
+                  <ScheduleItem label="Main Minyan" time="7:20 AM" />
                 </ul>
               </div>
               {/* Mincha */}
@@ -183,11 +181,9 @@ export default function Home() {
                   <Sunset /> Mincha
                 </h3>
                 <ul className="space-y-3 text-navy font-medium">
-                  <ScheduleItem label="Early Mincha" time="1:45 PM" />
-                  <ScheduleItem
-                    label="Mincha Bizman"
-                    time="15m before Shkiah"
-                  />
+                  <ScheduleItem label="Weekday" time="See davening page" />
+                  <ScheduleItem label="Shabbos - First" time="2:30 PM" />
+                  <ScheduleItem label="Shabbos - Second" time="1hr before Shkiah" />
                 </ul>
               </div>
               {/* Maariv */}
@@ -196,12 +192,8 @@ export default function Home() {
                   <Moon /> Maariv
                 </h3>
                 <ul className="space-y-3 text-navy font-medium">
-                  <ScheduleItem
-                    label="First Maariv"
-                    time="20m after Shkiah"
-                  />
+                  <ScheduleItem label="Early Maariv" time="6:00 PM" />
                   <ScheduleItem label="Late Maariv" time="9:00 PM" />
-                  <ScheduleItem label="Final Maariv" time="10:00 PM" />
                 </ul>
               </div>
             </div>
@@ -231,7 +223,7 @@ export default function Home() {
               title="Torah Learning"
               description="Daily Gemara shiurim, Halacha classes, and two full-day kollelim for all levels. Our Beis Medrash is vibrant from early morning until late at night."
               href="/programs#torah"
-              image="/pictures/beis-medrash-learning.jpg"
+              image="/pictures/fathers-learning.jpg"
             />
             <ProgramCard
               title="Community Events"

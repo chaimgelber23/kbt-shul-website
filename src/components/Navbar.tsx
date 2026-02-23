@@ -19,6 +19,7 @@ const navLinks = [
 // Shiurim dropdown links — curated major topics
 const shiurimDropdown = [
   { label: "All Shiurim", href: "/shiurim", description: "Browse all 30+ series" },
+  { label: "My Learning", href: "/my-learning", description: "Track your progress", highlight: true },
   { label: "Parshas HaShavua", href: "/shiurim/parsha", description: "Weekly Torah portion" },
   { label: "Yamim Tovim", href: "/shiurim/yamim-tovim", description: "Holidays & Yom Tov shiurim" },
   { label: "Kuzari", href: "/shiurim/kuzari", description: "Sefer HaKuzari" },
@@ -138,12 +139,12 @@ export default function Navbar() {
                             key={item.href}
                             href={item.href}
                             className={`flex flex-col px-4 py-2.5 hover:bg-primary/5 transition-colors ${
-                              i === 0
+                              i === 0 || i === 1
                                 ? "border-b border-primary/10 mb-1"
                                 : ""
-                            }`}
+                            } ${'highlight' in item && item.highlight ? "bg-primary/5" : ""}`}
                           >
-                            <span className="text-navy font-semibold text-sm">
+                            <span className={`font-semibold text-sm ${'highlight' in item && item.highlight ? "text-primary" : "text-navy"}`}>
                               {item.label}
                             </span>
                             <span className="text-navy/40 text-xs">

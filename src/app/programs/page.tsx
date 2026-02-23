@@ -105,8 +105,8 @@ export default function ProgramsPage() {
                   Yahrtzeit Learning
                 </h4>
                 <p className="text-navy/60 text-sm">
-                  Reserve a day of dedicated Torah learning for a loved
-                  one&apos;s yahrtzeit
+                  A specific curriculum of Torah learning dedicated to the
+                  neshamah of a loved one on their yahrtzeit
                 </p>
                 <span className="inline-flex items-center gap-1 text-primary text-sm font-semibold mt-3 group-hover:gap-2 transition-all">
                   Learn more &#x2192;

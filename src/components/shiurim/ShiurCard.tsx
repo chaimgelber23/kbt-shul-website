@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { Shiur } from "@/lib/types";
 import { getCategoryDef } from "@/lib/categories";
+import { getProgressPercentage, isInProgress } from "@/lib/progress";
 
 function formatDate(isoDate: string): string {
   const date = new Date(isoDate);
@@ -37,6 +39,14 @@ export default function ShiurCard({
   isCurrent: boolean;
 }) {
   const catDef = getCategoryDef(shiur.categoryId);
+  const [progressPercent, setProgressPercent] = useState(0);
+  const [inProgress, setInProgress] = useState(false);
+
+  // Update progress on mount and when shiur changes
+  useEffect(() => {
+    setProgressPercent(getProgressPercentage(shiur.id));
+    setInProgress(isInProgress(shiur.id));
+  }, [shiur.id]);
 
   return (
     <div
@@ -63,6 +73,34 @@ export default function ShiurCard({
         <span>{formatDuration(shiur.duration)}</span>
       </div>
 
+      {/* Progress bar - shown if in progress */}
+      {progressPercent > 0 && progressPercent < 100 && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between text-xs text-navy/60 mb-1">
+            <span>In Progress</span>
+            <span>{progressPercent}%</span>
+          </div>
+          <div className="h-1.5 bg-navy/10 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary rounded-full transition-all"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Completed badge */}
+      {progressPercent >= 100 && (
+        <div className="mb-4">
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-600">
+            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            Completed
+          </span>
+        </div>
+      )}
+
       {/* Play + Download buttons */}
       <div className="flex items-center gap-2">
         <button
@@ -86,7 +124,7 @@ export default function ShiurCard({
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
-              {isCurrent ? "Resume" : "Play"}
+              {isCurrent ? "Resume" : (inProgress ? "Resume" : "Play")}
             </>
           )}
         </button>
