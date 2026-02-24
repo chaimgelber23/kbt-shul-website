@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useAuth } from "./AuthProvider";
 
 interface AuthModalProps {
@@ -16,8 +17,25 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  if (!isOpen || !mounted) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +88,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     onClose();
   };
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[9999] flex items-center justify-center p-4" onClick={handleClose}>
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
         {/* Close button */}
@@ -113,12 +131,12 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-navy text-sm font-semibold mb-2">
+            <label htmlFor="auth-email" className="block text-navy text-sm font-semibold mb-2">
               Email
             </label>
             <input
               type="email"
-              id="email"
+              id="auth-email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2.5 border border-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -129,12 +147,12 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
           {mode !== "reset" && (
             <div>
-              <label htmlFor="password" className="block text-navy text-sm font-semibold mb-2">
+              <label htmlFor="auth-password" className="block text-navy text-sm font-semibold mb-2">
                 Password
               </label>
               <input
                 type="password"
-                id="password"
+                id="auth-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2.5 border border-navy/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -165,7 +183,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 Forgot password?
               </button>
               <div className="mt-3 text-navy/60">
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <button
                   onClick={() => setMode("signup")}
                   className="text-primary hover:text-primary-light font-semibold"
@@ -198,4 +216,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
