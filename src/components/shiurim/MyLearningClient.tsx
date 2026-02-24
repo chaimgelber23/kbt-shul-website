@@ -1,181 +1,173 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { useAuth } from "@/components/AuthProvider";
 import AuthModal from "@/components/AuthModal";
-import {
-  getAllProgress,
-  getSeriesProgress,
-  getProgressPercentage,
-  type ShiurProgress,
-  type SeriesProgress,
-} from "@/lib/progress";
+import { getAllProgress, getProgressPercentage } from "@/lib/progress";
+
+interface SeriesInfo {
+  slug: string;
+  name: string;
+  episodeCount: number;
+}
+
+interface SeriesWithProgress {
+  slug: string;
+  name: string;
+  episodeCount: number;
+  listenedCount: number;
+  completedCount: number;
+  lastListened: string;
+  lastShiurProgress: number;
+}
+
+interface LearningStats {
+  totalShiurim: number;
+  completedShiurim: number;
+  inProgressShiurim: number;
+  seriesStarted: number;
+  totalMinutes: number;
+}
+
+function computeData(allSeries: SeriesInfo[]) {
+  const all = getAllProgress();
+  const entries = Object.values(all).filter((p) => p.currentTime > 10);
+  const completed = entries.filter((p) => p.completed);
+  const inProgress = entries.filter((p) => !p.completed);
+  const totalSeconds = entries.reduce((acc, p) => acc + (p.currentTime || 0), 0);
+
+  const seriesMap = new Map<string, { listened: Set<string>; completed: Set<string>; lastListened: string; lastShiurId: string }>();
+  for (const p of entries) {
+    if (!p.seriesSlug) continue;
+    const existing = seriesMap.get(p.seriesSlug);
+    if (!existing) {
+      seriesMap.set(p.seriesSlug, {
+        listened: new Set([p.shiurId]),
+        completed: p.completed ? new Set([p.shiurId]) : new Set(),
+        lastListened: p.lastListened,
+        lastShiurId: p.shiurId,
+      });
+    } else {
+      existing.listened.add(p.shiurId);
+      if (p.completed) existing.completed.add(p.shiurId);
+      if (new Date(p.lastListened) > new Date(existing.lastListened)) {
+        existing.lastListened = p.lastListened;
+        existing.lastShiurId = p.shiurId;
+      }
+    }
+  }
+
+  const seriesProgress: SeriesWithProgress[] = [];
+  for (const series of allSeries) {
+    const data = seriesMap.get(series.slug);
+    if (!data) continue;
+    seriesProgress.push({
+      slug: series.slug,
+      name: series.name,
+      episodeCount: series.episodeCount,
+      listenedCount: data.listened.size,
+      completedCount: data.completed.size,
+      lastListened: data.lastListened,
+      lastShiurProgress: getProgressPercentage(data.lastShiurId),
+    });
+  }
+  seriesProgress.sort((a, b) => new Date(b.lastListened).getTime() - new Date(a.lastListened).getTime());
+
+  const stats: LearningStats = {
+    totalShiurim: entries.length,
+    completedShiurim: completed.length,
+    inProgressShiurim: inProgress.length,
+    seriesStarted: seriesMap.size,
+    totalMinutes: Math.round(totalSeconds / 60),
+  };
+
+  return { stats, seriesProgress };
+}
+
+function formatRelativeTime(isoDate: string): string {
+  const diff = Date.now() - new Date(isoDate).getTime();
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(mins / 60);
+  const days = Math.floor(hours / 24);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins} min${mins !== 1 ? "s" : ""} ago`;
+  if (hours < 24) return `${hours} hour${hours !== 1 ? "s" : ""} ago`;
+  if (days < 7) return `${days} day${days !== 1 ? "s" : ""} ago`;
+  return new Date(isoDate).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function formatMinutes(mins: number): string {
+  if (mins < 60) return `${mins} min`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
-const stagger = {
-  visible: { transition: { staggerChildren: 0.08 } },
-};
-
-interface SeriesWithProgress {
-  seriesSlug: string;
-  seriesName: string;
-  lastListened: string;
-  totalListened: number;
-  lastShiurTitle: string;
-  lastShiurId: string;
-  progressPercent: number;
-}
-
-export default function MyLearningClient() {
+export default function MyLearningClient({ allSeries }: { allSeries: SeriesInfo[] }) {
   const { user, loading: authLoading } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [inProgressSeries, setInProgressSeries] = useState<SeriesWithProgress[]>([]);
-  const [recentShiurim, setRecentShiurim] = useState<ShiurProgress[]>([]);
+  const [stats, setStats] = useState<LearningStats>({ totalShiurim: 0, completedShiurim: 0, inProgressShiurim: 0, seriesStarted: 0, totalMinutes: 0 });
+  const [seriesProgress, setSeriesProgress] = useState<SeriesWithProgress[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get all progress from localStorage
-    const allProgress = getAllProgress();
-    const progressArray = Object.values(allProgress);
-
-    // Filter for in-progress (not completed)
-    const inProgress = progressArray.filter((p) => !p.completed && p.currentTime > 10);
-
-    // Sort by last listened
-    const recent = inProgress
-      .sort((a, b) => new Date(b.lastListened).getTime() - new Date(a.lastListened).getTime())
-      .slice(0, 10);
-
-    setRecentShiurim(recent);
-
-    // Group by series
-    const seriesMap = new Map<string, SeriesWithProgress>();
-
-    inProgress.forEach((progress) => {
-      if (!progress.seriesSlug) return;
-
-      const existing = seriesMap.get(progress.seriesSlug);
-      if (!existing || new Date(progress.lastListened) > new Date(existing.lastListened)) {
-        // This is a placeholder - in a real app, you'd fetch the shiur details
-        seriesMap.set(progress.seriesSlug, {
-          seriesSlug: progress.seriesSlug,
-          seriesName: formatSeriesName(progress.seriesSlug),
-          lastListened: progress.lastListened,
-          totalListened: 1, // Would come from series progress
-          lastShiurTitle: "Shiur", // Would fetch from API
-          lastShiurId: progress.shiurId,
-          progressPercent: getProgressPercentage(progress.shiurId),
-        });
-      }
-    });
-
-    // Get series progress for accurate counts
-    Array.from(seriesMap.keys()).forEach((slug) => {
-      const seriesProgress = getSeriesProgress(slug);
-      if (seriesProgress) {
-        const current = seriesMap.get(slug)!;
-        seriesMap.set(slug, {
-          ...current,
-          totalListened: seriesProgress.totalListened,
-        });
-      }
-    });
-
-    setInProgressSeries(
-      Array.from(seriesMap.values()).sort(
-        (a, b) => new Date(b.lastListened).getTime() - new Date(a.lastListened).getTime()
-      )
-    );
-
+    const data = computeData(allSeries);
+    setStats(data.stats);
+    setSeriesProgress(data.seriesProgress);
     setLoading(false);
-  }, []);
+  }, [allSeries]);
 
-  // Show loading state while checking authentication
   if (authLoading) {
     return (
       <main className="min-h-screen bg-bg-light flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
           <p className="text-navy/60 mt-4">Loading...</p>
         </div>
       </main>
     );
   }
 
-  // Show sign-in prompt if not authenticated
   if (!user) {
     return (
       <main className="min-h-screen bg-bg-light py-20">
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-navy mb-4">My Learning</h1>
-            <p className="text-navy/60 text-lg mb-8">
-              Sign in to keep your place and track your shiurim across all devices
-            </p>
+            <p className="text-navy/60 text-lg mb-8">Sign in to keep your place and track your shiurim across all devices</p>
           </div>
-
-          {/* Benefits */}
           <div className="grid md:grid-cols-3 gap-6 mb-12">
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-primary/15">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+            {[
+              { icon: "M5 13l4 4L19 7", title: "Keep Your Place", desc: "Pick up exactly where you left off in every shiur" },
+              { icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z", title: "Track Progress", desc: "See how many shiurim you've completed in each series" },
+              { icon: "M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z", title: "Sync Across Devices", desc: "Start on your phone, continue on your computer" },
+            ].map(({ icon, title, desc }) => (
+              <div key={title} className="bg-white rounded-xl p-6 shadow-sm border border-primary/15">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                  <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={icon} />
+                  </svg>
+                </div>
+                <h3 className="text-navy font-bold text-lg mb-2">{title}</h3>
+                <p className="text-navy/60 text-sm">{desc}</p>
               </div>
-              <h3 className="text-navy font-bold text-lg mb-2">Keep Your Place</h3>
-              <p className="text-navy/60 text-sm">
-                Pick up exactly where you left off in every shiur, on any device
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-primary/15">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <h3 className="text-navy font-bold text-lg mb-2">Track Progress</h3>
-              <p className="text-navy/60 text-sm">
-                See your learning history and how many shiurim you've completed
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-primary/15">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h3 className="text-navy font-bold text-lg mb-2">Sync Across Devices</h3>
-              <p className="text-navy/60 text-sm">
-                Start on your phone, continue on your computer, seamlessly
-              </p>
-            </div>
+            ))}
           </div>
-
-          {/* Sign in button */}
           <div className="text-center">
-            <button
-              onClick={() => setShowAuthModal(true)}
-              className="inline-flex items-center gap-3 bg-primary text-white px-8 py-3 rounded-xl font-semibold hover:bg-primary-light transition-colors shadow-lg"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-              </svg>
+            <button onClick={() => setShowAuthModal(true)}
+              className="inline-flex items-center gap-3 bg-primary text-white px-8 py-3 rounded-xl font-semibold hover:bg-primary-light transition-colors shadow-lg">
               Sign In
             </button>
-            <p className="text-navy/40 text-sm mt-4">
-              Your progress is saved locally and synced when you sign in
-            </p>
+            <p className="text-navy/40 text-sm mt-4">Your progress is saved locally and synced when you sign in</p>
           </div>
         </div>
-
         <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       </main>
     );
@@ -183,185 +175,96 @@ export default function MyLearningClient() {
 
   return (
     <main className="min-h-screen bg-bg-light">
-      {/* Hero */}
       <section className="bg-gradient-to-br from-navy to-navy-light text-white py-16 px-6">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Welcome back, {user.displayName?.split(' ')[0] || 'there'}
+            Welcome back{user.displayName ? `, ${user.displayName.split(" ")[0]}` : ""}
           </h1>
-          <p className="text-white/80 text-lg">
-            Continue your Torah learning journey
-          </p>
+          <p className="text-white/80 text-lg">Continue your Torah learning journey</p>
         </div>
       </section>
 
-      {/* Content */}
       <section className="py-12 px-6">
         <div className="max-w-6xl mx-auto">
           {loading ? (
             <div className="text-center py-20">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-              <p className="text-navy/60 mt-4">Loading your progress...</p>
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
             </div>
-          ) : inProgressSeries.length === 0 && recentShiurim.length === 0 ? (
+          ) : seriesProgress.length === 0 ? (
             <div className="text-center py-20">
-              <svg
-                className="w-20 h-20 text-navy/20 mx-auto mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                />
-              </svg>
               <h2 className="text-2xl font-bold text-navy mb-2">Start Your Learning Journey</h2>
-              <p className="text-navy/60 mb-6">
-                You haven't started any shiurim yet. Browse our collection to begin.
-              </p>
-              <Link
-                href="/shiurim"
-                className="inline-block bg-primary text-white px-8 py-3 rounded-xl font-semibold hover:bg-primary-light transition-colors"
-              >
-                Browse Shiurim
-              </Link>
+              <p className="text-navy/60 mb-6">You haven&apos;t started any shiurim yet.</p>
+              <Link href="/shiurim" className="inline-block bg-primary text-white px-8 py-3 rounded-xl font-semibold hover:bg-primary-light transition-colors">Browse Shiurim</Link>
             </div>
           ) : (
             <>
-              {/* In Progress Series */}
-              {inProgressSeries.length > 0 && (
-                <div className="mb-12">
-                  <h2 className="text-2xl font-bold text-navy mb-6">Continue Learning</h2>
-                  <motion.div
-                    initial="hidden"
-                    animate="visible"
-                    variants={stagger}
-                    className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                  >
-                    {inProgressSeries.map((series) => (
-                      <motion.div key={series.seriesSlug} variants={fadeUp}>
-                        <Link
-                          href={`/shiurim/${series.seriesSlug}`}
-                          className="block bg-white border border-primary/15 rounded-xl p-6 shadow-sm hover:shadow-md hover:border-primary/30 transition-all group"
-                        >
-                          <div className="flex items-start justify-between gap-4 mb-4">
-                            <div className="flex-1">
-                              <h3 className="text-navy font-bold text-xl group-hover:text-primary transition-colors mb-1">
-                                {series.seriesName}
-                              </h3>
-                              <p className="text-navy/50 text-sm">
-                                {series.totalListened} shiur{series.totalListened !== 1 ? "im" : ""} listened
-                              </p>
-                            </div>
-                            <span className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-semibold rounded-full px-3 py-1.5 shrink-0">
-                              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M8 5v14l11-7z" />
-                              </svg>
-                              Resume
-                            </span>
-                          </div>
-
-                          {/* Progress bar */}
-                          {series.progressPercent > 0 && (
-                            <div className="mb-3">
-                              <div className="flex items-center justify-between text-xs text-navy/60 mb-1.5">
-                                <span>Last shiur progress</span>
-                                <span>{series.progressPercent}%</span>
-                              </div>
-                              <div className="h-2 bg-navy/10 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-primary rounded-full transition-all"
-                                  style={{ width: `${series.progressPercent}%` }}
-                                />
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="flex items-center gap-2 text-xs text-navy/40 pt-3 border-t border-primary/10">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
-                            Last listened: {formatRelativeTime(series.lastListened)}
-                          </div>
-                        </Link>
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                </div>
-              )}
-
-              {/* Recent Activity - commented out for now since we don't have shiur titles
-              {recentShiurim.length > 0 && (
-                <div>
-                  <h2 className="text-2xl font-bold text-navy mb-6">Recent Activity</h2>
-                  <div className="bg-white rounded-xl border border-primary/15 overflow-hidden">
-                    {recentShiurim.map((shiur, index) => (
-                      <div
-                        key={shiur.shiurId}
-                        className={`p-4 hover:bg-primary/5 transition-colors ${
-                          index !== recentShiurim.length - 1 ? "border-b border-primary/10" : ""
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex-1">
-                            <p className="text-navy font-semibold text-sm">
-                              {shiur.seriesSlug ? formatSeriesName(shiur.seriesSlug) : "Shiur"}
-                            </p>
-                            <p className="text-navy/40 text-xs mt-0.5">
-                              {formatRelativeTime(shiur.lastListened)}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-primary font-semibold text-sm">
-                              {getProgressPercentage(shiur.shiurId)}%
-                            </p>
-                            <p className="text-navy/40 text-xs">
-                              {shiur.completed ? "Completed" : "In Progress"}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+              {/* Stats Overview */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
+                {[
+                  { label: "Shiurim Started", value: stats.totalShiurim },
+                  { label: "Completed", value: stats.completedShiurim },
+                  { label: "In Progress", value: stats.inProgressShiurim },
+                  { label: "Series", value: stats.seriesStarted },
+                  { label: "Time Listened", value: formatMinutes(stats.totalMinutes) },
+                ].map((item) => (
+                  <div key={item.label} className="bg-white border border-primary/15 rounded-xl p-4 text-center shadow-sm">
+                    <p className="text-navy text-2xl font-bold">{item.value}</p>
+                    <p className="text-navy/50 text-xs mt-1">{item.label}</p>
                   </div>
-                </div>
-              )}
-              */}
+                ))}
+              </div>
+
+              {/* Series Progress Cards */}
+              <h2 className="text-navy font-bold text-2xl mb-6">Continue Learning</h2>
+              <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.08 } } }} className="space-y-4">
+                {seriesProgress.map((s) => {
+                  const pct = Math.round((s.completedCount / s.episodeCount) * 100);
+                  return (
+                    <motion.div key={s.slug} variants={fadeUp}>
+                      <Link href={`/shiurim/${s.slug}`}
+                        className="block bg-white border border-primary/15 rounded-xl p-6 shadow-sm hover:shadow-md hover:border-primary/30 transition-all group">
+                        <div className="flex items-center justify-between gap-4 mb-4">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-navy font-bold text-xl group-hover:text-primary transition-colors">{s.name}</h3>
+                            <p className="text-navy/50 text-sm mt-1">
+                              <span className="font-semibold text-navy/70">{s.completedCount}</span> / {s.episodeCount} shiurim completed
+                              <span className="text-navy/30 mx-2">&middot;</span>
+                              Last listened {formatRelativeTime(s.lastListened)}
+                            </p>
+                          </div>
+                          <span className="inline-flex items-center gap-2 bg-primary text-white text-sm font-semibold rounded-xl px-5 py-2.5 shrink-0 shadow-sm group-hover:bg-primary-light transition-colors">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                            Continue
+                          </span>
+                        </div>
+                        <div className="h-2.5 bg-navy/8 rounded-full overflow-hidden">
+                          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
+                        </div>
+                        <div className="flex items-center justify-between mt-2">
+                          <p className="text-navy/40 text-xs">{pct}% complete</p>
+                          {s.lastShiurProgress > 0 && s.lastShiurProgress < 100 && (
+                            <p className="text-primary text-xs font-medium">Current shiur: {s.lastShiurProgress}% listened</p>
+                          )}
+                        </div>
+                      </Link>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+
+              {/* Browse More */}
+              <div className="mt-10 text-center">
+                <Link href="/shiurim" className="inline-flex items-center gap-2 border-2 border-primary/30 text-navy px-8 py-3 rounded-xl font-semibold hover:bg-primary/5 transition-colors">
+                  <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Browse More Shiurim
+                </Link>
+              </div>
             </>
           )}
         </div>
       </section>
     </main>
   );
-}
-
-// Helper functions
-function formatSeriesName(slug: string): string {
-  // Convert slug to readable name
-  return slug
-    .split("-")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
-
-function formatRelativeTime(isoDate: string): string {
-  const date = new Date(isoDate);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins} min${diffMins !== 1 ? "s" : ""} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`;
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
