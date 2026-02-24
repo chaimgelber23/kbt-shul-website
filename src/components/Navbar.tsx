@@ -96,8 +96,7 @@ export default function Navbar() {
           {navLinks.map((link) =>
             link.hasDropdown ? (
               <div key={link.href} className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setShiurimOpen(!shiurimOpen)}
+                <div
                   onMouseEnter={() => setShiurimOpen(true)}
                   className={`text-sm font-semibold transition-colors flex items-center gap-1 ${
                     pathname.startsWith("/shiurim")
@@ -105,23 +104,30 @@ export default function Navbar() {
                       : "text-navy hover:text-primary"
                   }`}
                 >
-                  {link.label}
-                  <svg
-                    className={`w-3.5 h-3.5 transition-transform ${
-                      shiurimOpen ? "rotate-180" : ""
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                  <Link href="/shiurim">
+                    {link.label}
+                  </Link>
+                  <button
+                    onClick={() => setShiurimOpen(!shiurimOpen)}
+                    className="p-0.5"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2.5}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
+                    <svg
+                      className={`w-3.5 h-3.5 transition-transform ${
+                        shiurimOpen ? "rotate-180" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2.5}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
+                </div>
 
                 <AnimatePresence>
                   {shiurimOpen && (
@@ -258,29 +264,37 @@ export default function Navbar() {
               {navLinks.map((link) =>
                 link.hasDropdown ? (
                   <div key={link.href}>
-                    <button
-                      onClick={() =>
-                        setMobileShiurimOpen(!mobileShiurimOpen)
-                      }
-                      className="text-base font-semibold text-navy flex items-center gap-2 w-full"
-                    >
-                      {link.label}
-                      <svg
-                        className={`w-4 h-4 transition-transform ${
-                          mobileShiurimOpen ? "rotate-180" : ""
-                        }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                    <div className="flex items-center gap-2 w-full">
+                      <Link
+                        href="/shiurim"
+                        onClick={() => setMobileOpen(false)}
+                        className="text-base font-semibold text-navy"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </button>
+                        {link.label}
+                      </Link>
+                      <button
+                        onClick={() =>
+                          setMobileShiurimOpen(!mobileShiurimOpen)
+                        }
+                        className="p-1"
+                      >
+                        <svg
+                          className={`w-4 h-4 transition-transform ${
+                            mobileShiurimOpen ? "rotate-180" : ""
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                     <AnimatePresence>
                       {mobileShiurimOpen && (
                         <motion.div
