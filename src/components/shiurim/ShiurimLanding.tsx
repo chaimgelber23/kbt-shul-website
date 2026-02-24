@@ -9,6 +9,7 @@ import ShiurimHero from "./ShiurimHero";
 import SearchBar from "./SearchBar";
 import SeriesCard from "./SeriesCard";
 import ShiurCard from "./ShiurCard";
+import SignInBanner from "../SignInBanner";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -68,6 +69,9 @@ export default function ShiurimLanding({
   return (
     <main className="min-h-screen">
       <ShiurimHero totalCount={totalCount} />
+
+      {/* Sign in banner for unauthenticated users */}
+      <SignInBanner />
 
       {/* This Week's Parsha */}
       {currentParsha && parshaShiurim.length > 0 && !isSearching && (

@@ -8,6 +8,7 @@ import { useAudioPlayer } from "./AudioPlayerProvider";
 import { getRecommendedShiur, getNextShiur } from "@/lib/progress";
 import SeriesHero from "./SeriesHero";
 import ShiurCard from "./ShiurCard";
+import SignInBanner from "../SignInBanner";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -128,6 +129,9 @@ export default function SeriesPageClient({
         group={series.group}
         episodeCount={shiurim.length}
       />
+
+      {/* Sign in banner for unauthenticated users */}
+      <SignInBanner />
 
       <section className="py-12 px-6 bg-bg-light">
         <div className="max-w-6xl mx-auto">
