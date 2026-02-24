@@ -50,7 +50,11 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
       // Load progress from Firestore when user signs in
       if (user) {
-        await loadProgressFromFirestore();
+        try {
+          await loadProgressFromFirestore();
+        } catch (e) {
+          console.error("Failed to load progress from Firestore:", e);
+        }
       }
 
       setLoading(false);
