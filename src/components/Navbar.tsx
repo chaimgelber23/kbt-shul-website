@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "./AuthProvider";
+import AuthModal from "./AuthModal";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -41,9 +42,10 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [shiurimOpen, setShiurimOpen] = useState(false);
   const [mobileShiurimOpen, setMobileShiurimOpen] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-  const { user, signInWithGoogle, signOut } = useAuth();
+  const { user, signOut } = useAuth();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -203,7 +205,7 @@ export default function Navbar() {
             </button>
           ) : (
             <button
-              onClick={() => signInWithGoogle()}
+              onClick={() => setShowAuthModal(true)}
               className="hidden lg:flex items-center gap-2 text-navy hover:text-primary transition-colors text-sm font-semibold"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -350,7 +352,7 @@ export default function Navbar() {
               ) : (
                 <button
                   onClick={() => {
-                    signInWithGoogle();
+                    setShowAuthModal(true);
                     setMobileOpen(false);
                   }}
                   className="flex items-center gap-2 text-navy text-sm font-semibold"
@@ -365,6 +367,8 @@ export default function Navbar() {
           </motion.nav>
         )}
       </AnimatePresence>
+
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </header>
   );
 }
