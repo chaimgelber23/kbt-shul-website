@@ -198,8 +198,8 @@ export default function Navbar() {
             Contact
           </Link>
           {user ? (
-            <button
-              onClick={() => signOut()}
+            <Link
+              href="/profile"
               className="hidden lg:flex items-center gap-2 text-navy hover:text-primary transition-colors text-sm font-semibold"
             >
               <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
@@ -207,8 +207,8 @@ export default function Navbar() {
                   {user.displayName?.charAt(0) || user.email?.charAt(0) || "U"}
                 </span>
               </div>
-              Sign Out
-            </button>
+              My Profile
+            </Link>
           ) : (
             <button
               onClick={() => setShowAuthModal(true)}
@@ -349,11 +349,9 @@ export default function Navbar() {
                 Contact
               </Link>
               {user ? (
-                <button
-                  onClick={() => {
-                    signOut();
-                    setMobileOpen(false);
-                  }}
+                <Link
+                  href="/profile"
+                  onClick={() => setMobileOpen(false)}
                   className="flex items-center gap-2 text-navy text-sm font-semibold"
                 >
                   <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
@@ -361,8 +359,8 @@ export default function Navbar() {
                       {user.displayName?.charAt(0) || user.email?.charAt(0) || "U"}
                     </span>
                   </div>
-                  Sign Out
-                </button>
+                  My Profile
+                </Link>
               ) : (
                 <button
                   onClick={() => {

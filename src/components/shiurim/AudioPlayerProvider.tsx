@@ -46,9 +46,15 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const nextShiurRef = useRef<Shiur | null>(null);
   const seriesSlugRef = useRef<string | null>(null);
+  const currentShiurRef = useRef<Shiur | null>(null);
   const progressSaveIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Create audio element once on mount
+  // Keep the ref in sync with state
+  useEffect(() => {
+    currentShiurRef.current = playerState.currentShiur;
+  }, [playerState.currentShiur]);
+
+  // Create audio element ONCE on mount — never recreate
   useEffect(() => {
     const audio = new Audio();
     audio.preload = "none";
@@ -63,10 +69,11 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     const onEnded = () => {
       setPlayerState((p) => ({ ...p, isPlaying: false, currentTime: 0 }));
 
-      // Mark current shiur as completed
-      if (playerState.currentShiur) {
+      // Mark current shiur as completed (use ref, not stale closure)
+      const shiur = currentShiurRef.current;
+      if (shiur) {
         saveShiurProgress({
-          shiurId: playerState.currentShiur.id,
+          shiurId: shiur.id,
           seriesSlug: seriesSlugRef.current || undefined,
           currentTime: audio.duration || 0,
           duration: audio.duration || 0,
@@ -74,9 +81,8 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
           completed: true,
         });
 
-        // Save series progress
         if (seriesSlugRef.current) {
-          saveSeriesProgress(seriesSlugRef.current, playerState.currentShiur.id);
+          saveSeriesProgress(seriesSlugRef.current, shiur.id);
         }
       }
 
@@ -95,7 +101,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
               currentTime: 0,
             }));
           }
-        }, 1500); // Small delay before auto-advancing
+        }, 1500);
       }
     };
 
@@ -114,28 +120,26 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       audio.pause();
       audio.src = "";
     };
-  }, [playerState.currentShiur]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps — create once, never destroy
 
   // Periodic progress saving (every 5 seconds when playing)
   useEffect(() => {
     if (playerState.isPlaying && playerState.currentShiur && playerState.duration > 0) {
-      // Clear any existing interval
       if (progressSaveIntervalRef.current) {
         clearInterval(progressSaveIntervalRef.current);
       }
 
-      // Save progress every 5 seconds
       progressSaveIntervalRef.current = setInterval(() => {
         const audio = audioRef.current;
-        if (audio && playerState.currentShiur) {
+        const shiur = currentShiurRef.current;
+        if (audio && shiur) {
           const currentTime = audio.currentTime;
           const duration = audio.duration;
-
-          // Consider completed if within last 30 seconds
           const completed = duration - currentTime < 30;
 
           saveShiurProgress({
-            shiurId: playerState.currentShiur.id,
+            shiurId: shiur.id,
             seriesSlug: seriesSlugRef.current || undefined,
             currentTime,
             duration,
@@ -143,14 +147,12 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
             completed,
           });
 
-          // Update series progress
           if (seriesSlugRef.current) {
-            saveSeriesProgress(seriesSlugRef.current, playerState.currentShiur.id);
+            saveSeriesProgress(seriesSlugRef.current, shiur.id);
           }
         }
       }, 5000);
     } else {
-      // Clear interval when paused or stopped
       if (progressSaveIntervalRef.current) {
         clearInterval(progressSaveIntervalRef.current);
         progressSaveIntervalRef.current = null;
@@ -173,7 +175,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       seriesSlugRef.current = seriesSlug || null;
       nextShiurRef.current = nextShiur || null;
 
-      if (playerState.currentShiur?.id === shiur.id) {
+      if (currentShiurRef.current?.id === shiur.id) {
         if (audio.paused) {
           audio.play();
         } else {
@@ -182,7 +184,6 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       } else {
         audio.src = shiur.audioUrl;
 
-        // Load saved progress unless explicitly starting from beginning
         const savedProgress = !startFromBeginning ? getShiurProgress(shiur.id) : null;
         const startTime = savedProgress && !savedProgress.completed ? savedProgress.currentTime : 0;
 
@@ -197,7 +198,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
         }));
       }
     },
-    [playerState.currentShiur?.id]
+    []
   );
 
   const togglePlayPause = useCallback(() => {
