@@ -4,7 +4,7 @@ import { useAudioPlayer } from "./AudioPlayerProvider";
 import AudioPlayer from "./AudioPlayer";
 
 export default function AudioPlayerBar() {
-  const { playerState, togglePlayPause, seek, setPlaybackRate, closePlayer } =
+  const { playerState, togglePlayPause, seek, skipBack, skipForward, setPlaybackRate, closePlayer } =
     useAudioPlayer();
 
   if (!playerState.currentShiur) return null;
@@ -18,6 +18,8 @@ export default function AudioPlayerBar() {
       playbackRate={playerState.playbackRate}
       onTogglePlay={togglePlayPause}
       onSeek={seek}
+      onSkipBack={skipBack}
+      onSkipForward={skipForward}
       onSetRate={setPlaybackRate}
       onClose={closePlayer}
     />

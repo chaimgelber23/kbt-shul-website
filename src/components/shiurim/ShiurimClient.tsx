@@ -195,6 +195,16 @@ export default function ShiurimClient({
     audio.currentTime = time;
   }, []);
 
+  const skipBack = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio) audio.currentTime = Math.max(0, audio.currentTime - 10);
+  }, []);
+
+  const skipForward = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio) audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 10);
+  }, []);
+
   const setPlaybackRate = useCallback((rate: number) => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -487,6 +497,8 @@ export default function ShiurimClient({
           playbackRate={playerState.playbackRate}
           onTogglePlay={togglePlayPause}
           onSeek={seek}
+          onSkipBack={skipBack}
+          onSkipForward={skipForward}
           onSetRate={setPlaybackRate}
           onClose={closePlayer}
         />

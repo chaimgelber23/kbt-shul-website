@@ -21,6 +21,8 @@ interface AudioPlayerContextType {
   playShiur: (shiur: Shiur, startFromBeginning?: boolean, seriesSlug?: string, nextShiur?: Shiur | null) => void;
   togglePlayPause: () => void;
   seek: (time: number) => void;
+  skipBack: () => void;
+  skipForward: () => void;
   setPlaybackRate: (rate: number) => void;
   closePlayer: () => void;
 }
@@ -217,6 +219,16 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     audio.currentTime = time;
   }, []);
 
+  const skipBack = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio) audio.currentTime = Math.max(0, audio.currentTime - 10);
+  }, []);
+
+  const skipForward = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio) audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 10);
+  }, []);
+
   const setPlaybackRate = useCallback((rate: number) => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -246,6 +258,8 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
         playShiur,
         togglePlayPause,
         seek,
+        skipBack,
+        skipForward,
         setPlaybackRate,
         closePlayer,
       }}
