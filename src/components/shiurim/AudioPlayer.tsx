@@ -75,10 +75,11 @@ export default function AudioPlayer({
 
           <div className="flex items-center gap-3">
             {/* Skip Back */}
-            <button onClick={onSkipBack} className="shrink-0 w-8 h-8 flex items-center justify-center text-white/50 hover:text-primary transition-colors" title="Back 10s">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.333 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z" />
+            <button onClick={onSkipBack} className="relative shrink-0 w-8 h-8 flex items-center justify-center text-white/50 hover:text-primary transition-colors" title="Back 10s">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 16.5V9.5m4 7V9.5m0 0v-1a2 2 0 00-2-2m2 3v-1a2 2 0 011-1.732M3 13c0-4.97 4.03-9 9-9a9 9 0 019 9c0 4.97-4.03 9-9 9-2.062 0-3.96-.696-5.46-1.855M3 13H1m2 0l-2-2m2 2l-2 2" />
               </svg>
+              <span className="absolute text-[8px] font-bold mt-0.5">10</span>
             </button>
 
             {/* Play/Pause */}
@@ -99,10 +100,11 @@ export default function AudioPlayer({
             </button>
 
             {/* Skip Forward */}
-            <button onClick={onSkipForward} className="shrink-0 w-8 h-8 flex items-center justify-center text-white/50 hover:text-primary transition-colors" title="Forward 10s">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.933 12.8a1 1 0 000-1.6L6.6 7.2A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4zM19.933 12.8a1 1 0 000-1.6l-5.333-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.333-4z" />
+            <button onClick={onSkipForward} className="relative shrink-0 w-8 h-8 flex items-center justify-center text-white/50 hover:text-primary transition-colors" title="Forward 10s">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 16.5V9.5m4 7V9.5m0 0v-1a2 2 0 012-2m-2 3v-1a2 2 0 00-1-1.732M21 13c0-4.97-4.03-9-9-9a9 9 0 00-9 9c0 4.97 4.03 9 9 9 2.062 0 3.96-.696 5.46-1.855M21 13h2m-2 0l2-2m-2 2l2 2" />
               </svg>
+              <span className="absolute text-[8px] font-bold mt-0.5">10</span>
             </button>
 
             {/* Title + Time */}
@@ -121,11 +123,10 @@ export default function AudioPlayer({
                 <button
                   key={rate}
                   onClick={() => onSetRate(rate)}
-                  className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
-                    playbackRate === rate
+                  className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${playbackRate === rate
                       ? "bg-primary text-navy"
                       : "text-white/50 hover:text-white/80"
-                  }`}
+                    }`}
                 >
                   {rate}x
                 </button>
