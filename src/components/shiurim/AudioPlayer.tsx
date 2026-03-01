@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import type { Shiur } from "@/lib/types";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -58,6 +58,14 @@ export default function AudioPlayer({
     []
   );
 
+  // Keep a ref for drag progress so event listeners always see latest value
+  const dragProgressRef = useRef(0);
+  const isDraggingRef = useRef(false);
+
+  // Sync refs with state
+  useEffect(() => { dragProgressRef.current = dragProgress; }, [dragProgress]);
+  useEffect(() => { isDraggingRef.current = isDragging; }, [isDragging]);
+
   // --- Mouse handlers ---
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -65,14 +73,18 @@ export default function AudioPlayer({
       const pct = getProgressFromEvent(e.clientX);
       setIsDragging(true);
       setDragProgress(pct);
+      dragProgressRef.current = pct;
 
       const handleMouseMove = (ev: MouseEvent) => {
+        ev.preventDefault();
         const p = getProgressFromEvent(ev.clientX);
+        dragProgressRef.current = p;
         setDragProgress(p);
       };
       const handleMouseUp = (ev: MouseEvent) => {
         const p = getProgressFromEvent(ev.clientX);
         setIsDragging(false);
+        setDragProgress(p);
         onSeek((p / 100) * duration);
         window.removeEventListener("mousemove", handleMouseMove);
         window.removeEventListener("mouseup", handleMouseUp);
@@ -88,29 +100,33 @@ export default function AudioPlayer({
     (e: React.TouchEvent) => {
       const touch = e.touches[0];
       if (!touch) return;
+      e.preventDefault(); // prevent scroll
       const pct = getProgressFromEvent(touch.clientX);
       setIsDragging(true);
       setDragProgress(pct);
+      dragProgressRef.current = pct;
     },
     [getProgressFromEvent]
   );
 
   const handleTouchMove = useCallback(
     (e: React.TouchEvent) => {
-      if (!isDragging) return;
+      if (!isDraggingRef.current) return;
+      e.preventDefault(); // prevent scroll while seeking
       const touch = e.touches[0];
       if (!touch) return;
       const pct = getProgressFromEvent(touch.clientX);
+      dragProgressRef.current = pct;
       setDragProgress(pct);
     },
-    [isDragging, getProgressFromEvent]
+    [getProgressFromEvent]
   );
 
   const handleTouchEnd = useCallback(() => {
-    if (!isDragging) return;
+    if (!isDraggingRef.current) return;
     setIsDragging(false);
-    onSeek((dragProgress / 100) * duration);
-  }, [isDragging, dragProgress, duration, onSeek]);
+    onSeek((dragProgressRef.current / 100) * duration);
+  }, [duration, onSeek]);
 
   const displayProgress = isDragging ? dragProgress : progress;
   const displayTime = isDragging
@@ -168,13 +184,13 @@ export default function AudioPlayer({
 
               {/* Filled track */}
               <div
-                className="absolute left-0 h-1.5 bg-primary rounded-full transition-[width] duration-75"
+                className={`absolute left-0 h-1.5 bg-primary rounded-full ${isDragging ? '' : 'transition-[width] duration-150'}`}
                 style={{ width: `${displayProgress}%` }}
               />
 
               {/* Thumb / bubble */}
               <div
-                className="absolute h-4 w-4 bg-primary rounded-full shadow-md shadow-primary/30 -translate-x-1/2 transition-[left] duration-75 hover:scale-125 active:scale-125"
+                className={`absolute h-4 w-4 bg-primary rounded-full shadow-md shadow-primary/30 -translate-x-1/2 hover:scale-125 active:scale-125 ${isDragging ? '' : 'transition-[left] duration-150'}`}
                 style={{ left: `${displayProgress}%` }}
               >
                 {/* Glow ring on hover / drag */}
@@ -240,8 +256,8 @@ export default function AudioPlayer({
                   key={rate}
                   onClick={() => onSetRate(rate)}
                   className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${playbackRate === rate
-                      ? "bg-primary text-navy"
-                      : "text-white/50 hover:text-white/80"
+                    ? "bg-primary text-navy"
+                    : "text-white/50 hover:text-white/80"
                     }`}
                 >
                   {rate}x
