@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useAuth } from "@/components/AuthProvider";
 import AuthModal from "@/components/AuthModal";
-import { getAllProgress, getProgressPercentage } from "@/lib/progress";
+import {
+  getAllProgress,
+  getProgressPercentage,
+  loadProgressFromFirestore,
+} from "@/lib/progress";
 
 interface SeriesInfo {
   slug: string;
@@ -115,85 +119,96 @@ export default function MyLearningClient({ allSeries }: { allSeries: SeriesInfo[
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [stats, setStats] = useState<LearningStats>({ totalShiurim: 0, completedShiurim: 0, inProgressShiurim: 0, seriesStarted: 0, totalMinutes: 0 });
   const [seriesProgress, setSeriesProgress] = useState<SeriesWithProgress[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [ready, setReady] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
-  useEffect(() => {
+  // Compute data from localStorage
+  const refresh = useCallback(() => {
     const data = computeData(allSeries);
     setStats(data.stats);
     setSeriesProgress(data.seriesProgress);
-    setLoading(false);
   }, [allSeries]);
 
-  if (authLoading) {
+  // Load local progress immediately on mount — don't wait for auth
+  useEffect(() => {
+    refresh();
+    setReady(true);
+  }, [refresh]);
+
+  // When auth resolves AND user is signed in, sync from Firestore then recompute
+  useEffect(() => {
+    if (authLoading || !user) return;
+    let cancelled = false;
+    setSyncing(true);
+    loadProgressFromFirestore()
+      .then(() => {
+        if (!cancelled) refresh();
+      })
+      .catch(() => { })
+      .finally(() => {
+        if (!cancelled) setSyncing(false);
+      });
+    return () => { cancelled = true; };
+  }, [authLoading, user, refresh]);
+
+  // Show a minimal skeleton if we haven't even read localStorage yet (one frame at most)
+  if (!ready) {
     return (
       <main className="min-h-screen bg-bg-light flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
-          <p className="text-navy/60 mt-4">Loading...</p>
+          <p className="text-navy/60 mt-4">Loading…</p>
         </div>
       </main>
     );
   }
 
-  if (!user) {
-    return (
-      <main className="min-h-screen bg-bg-light py-20">
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-navy mb-4">My Learning</h1>
-            <p className="text-navy/60 text-lg mb-8">Sign in to keep your place and track your shiurim across all devices</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            {[
-              { icon: "M5 13l4 4L19 7", title: "Keep Your Place", desc: "Pick up exactly where you left off in every shiur" },
-              { icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z", title: "Track Progress", desc: "See how many shiurim you've completed in each series" },
-              { icon: "M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z", title: "Sync Across Devices", desc: "Start on your phone, continue on your computer" },
-            ].map(({ icon, title, desc }) => (
-              <div key={title} className="bg-white rounded-xl p-6 shadow-sm border border-primary/15">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={icon} />
-                  </svg>
-                </div>
-                <h3 className="text-navy font-bold text-lg mb-2">{title}</h3>
-                <p className="text-navy/60 text-sm">{desc}</p>
-              </div>
-            ))}
-          </div>
-          <div className="text-center">
-            <button onClick={() => setShowAuthModal(true)}
-              className="inline-flex items-center gap-3 bg-primary text-white px-8 py-3 rounded-xl font-semibold hover:bg-primary-light transition-colors shadow-lg">
-              Sign In
-            </button>
-            <p className="text-navy/40 text-sm mt-4">Your progress is saved locally and synced when you sign in</p>
-          </div>
-        </div>
-        <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
-      </main>
-    );
-  }
+  const hasProgress = seriesProgress.length > 0;
 
   return (
     <main className="min-h-screen bg-bg-light">
+      {/* Hero */}
       <section className="bg-gradient-to-br from-navy to-navy-light text-white py-16 px-6">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Welcome back{user.displayName ? `, ${user.displayName.split(" ")[0]}` : ""}
+            {user ? `Welcome back${user.displayName ? `, ${user.displayName.split(" ")[0]}` : ""}` : "My Learning"}
           </h1>
-          <p className="text-white/80 text-lg">Continue your Torah learning journey</p>
+          <p className="text-white/80 text-lg">
+            {user ? "Continue your Torah learning journey" : "Track your Torah learning journey"}
+          </p>
         </div>
       </section>
 
       <section className="py-12 px-6">
         <div className="max-w-6xl mx-auto">
-          {loading ? (
-            <div className="text-center py-20">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
+          {/* Sign-in prompt (non-blocking) */}
+          {!user && !authLoading && (
+            <div className="mb-8 bg-white border border-primary/20 rounded-xl p-5 flex flex-col sm:flex-row items-center gap-4 shadow-sm">
+              <div className="flex-1 min-w-0">
+                <p className="text-navy font-semibold">Sign in to sync your progress across devices</p>
+                <p className="text-navy/50 text-sm mt-1">Your progress is saved locally — sign in to keep it in the cloud too</p>
+              </div>
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="shrink-0 bg-primary text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-primary-light transition-colors shadow-sm"
+              >
+                Sign In
+              </button>
             </div>
-          ) : seriesProgress.length === 0 ? (
+          )}
+
+          {/* Syncing indicator */}
+          {syncing && (
+            <div className="mb-4 flex items-center gap-2 text-navy/50 text-sm">
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
+              Syncing your progress…
+            </div>
+          )}
+
+          {!hasProgress ? (
             <div className="text-center py-20">
               <h2 className="text-2xl font-bold text-navy mb-2">Start Your Learning Journey</h2>
-              <p className="text-navy/60 mb-6">You haven&apos;t started any shiurim yet.</p>
+              <p className="text-navy/60 mb-6">You haven&apos;t started any shiurim yet. Browse our library to begin!</p>
               <Link href="/shiurim" className="inline-block bg-primary text-white px-8 py-3 rounded-xl font-semibold hover:bg-primary-light transition-colors">Browse Shiurim</Link>
             </div>
           ) : (
@@ -265,6 +280,8 @@ export default function MyLearningClient({ allSeries }: { allSeries: SeriesInfo[
           )}
         </div>
       </section>
+
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </main>
   );
 }
