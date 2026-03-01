@@ -115,7 +115,7 @@ export default function AudioPlayer({
               </p>
             </div>
 
-            {/* Speed control */}
+            {/* Speed control (Desktop) */}
             <div className="hidden sm:flex items-center gap-1">
               {RATES.map((rate) => (
                 <button
@@ -131,6 +131,18 @@ export default function AudioPlayer({
                 </button>
               ))}
             </div>
+
+            {/* Speed control (Mobile) */}
+            <button
+              onClick={() => {
+                const currentIndex = RATES.indexOf(playbackRate);
+                const nextIndex = (currentIndex + 1) % RATES.length;
+                onSetRate(RATES[nextIndex] || 1);
+              }}
+              className="sm:hidden shrink-0 px-2 py-1 rounded bg-white/10 text-white/90 text-xs font-medium hover:bg-white/20 transition-colors"
+            >
+              {playbackRate}x
+            </button>
 
             {/* Close */}
             <button
