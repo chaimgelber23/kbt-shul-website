@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useAuth } from "@/components/AuthProvider";
@@ -11,10 +11,20 @@ import {
   loadProgressFromFirestore,
 } from "@/lib/progress";
 
+/* ------------------------------------------------------------------ */
+/*  Types                                                              */
+/* ------------------------------------------------------------------ */
+
 interface SeriesInfo {
   slug: string;
   name: string;
   episodeCount: number;
+  group: string | null;
+}
+
+interface GroupInfo {
+  id: string;
+  label: string;
 }
 
 interface SeriesWithProgress {
@@ -25,6 +35,27 @@ interface SeriesWithProgress {
   completedCount: number;
   lastListened: string;
   lastShiurProgress: number;
+  group: string | null;
+}
+
+interface GroupedSeriesCard {
+  slug: string;
+  name: string;
+  episodeCount: number;
+  listenedCount: number;
+  completedCount: number;
+  lastListened: string;
+  lastShiurProgress: number;
+  isGroup: boolean;
+}
+
+interface RecentShiur {
+  shiurId: string;
+  seriesSlug: string;
+  seriesName: string;
+  progress: number;
+  lastListened: string;
+  completed: boolean;
 }
 
 interface LearningStats {
@@ -33,9 +64,48 @@ interface LearningStats {
   inProgressShiurim: number;
   seriesStarted: number;
   totalMinutes: number;
+  streak: number;
 }
 
-function computeData(allSeries: SeriesInfo[]) {
+type TabId = "all" | "in-progress" | "completed";
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+function computeStreak(entries: { lastListened: string }[]): number {
+  if (entries.length === 0) return 0;
+  const days = new Set<string>();
+  for (const e of entries) {
+    days.add(new Date(e.lastListened).toLocaleDateString("en-US"));
+  }
+  const sorted = Array.from(days)
+    .map((d) => new Date(d))
+    .sort((a, b) => b.getTime() - a.getTime());
+
+  let streak = 0;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  if (sorted[0]?.getTime() !== today.getTime() && sorted[0]?.getTime() !== yesterday.getTime()) {
+    return 0;
+  }
+
+  for (let i = 0; i < sorted.length; i++) {
+    const expected = new Date(sorted[0]);
+    expected.setDate(expected.getDate() - i);
+    if (sorted[i].getTime() === expected.getTime()) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+function computeData(allSeries: SeriesInfo[], groups: GroupInfo[]) {
   const all = getAllProgress();
   const entries = Object.values(all).filter((p) => p.currentTime > 10);
   const completed = entries.filter((p) => p.completed);
@@ -75,9 +145,86 @@ function computeData(allSeries: SeriesInfo[]) {
       completedCount: data.completed.size,
       lastListened: data.lastListened,
       lastShiurProgress: getProgressPercentage(data.lastShiurId),
+      group: series.group,
     });
   }
-  seriesProgress.sort((a, b) => new Date(b.lastListened).getTime() - new Date(a.lastListened).getTime());
+
+  // Consolidate grouped series
+  const groupMap = new Map<string, GroupInfo>();
+  for (const g of groups) groupMap.set(g.id, g);
+
+  const groupBuckets = new Map<string, SeriesWithProgress[]>();
+  const ungrouped: SeriesWithProgress[] = [];
+
+  for (const sp of seriesProgress) {
+    if (sp.group && groupMap.has(sp.group)) {
+      const bucket = groupBuckets.get(sp.group) || [];
+      bucket.push(sp);
+      groupBuckets.set(sp.group, bucket);
+    } else {
+      ungrouped.push(sp);
+    }
+  }
+
+  const cards: GroupedSeriesCard[] = [];
+
+  for (const [groupId, bucket] of groupBuckets) {
+    const gInfo = groupMap.get(groupId)!;
+    const totalEp = bucket.reduce((a, s) => a + s.episodeCount, 0);
+    const totalListened = bucket.reduce((a, s) => a + s.listenedCount, 0);
+    const totalCompleted = bucket.reduce((a, s) => a + s.completedCount, 0);
+    const latest = bucket.reduce((a, s) => (new Date(s.lastListened) > new Date(a) ? s.lastListened : a), bucket[0].lastListened);
+    const latestSeries = bucket.reduce((best, s) => (new Date(s.lastListened) > new Date(best.lastListened) ? s : best), bucket[0]);
+
+    cards.push({
+      slug: groupId,
+      name: gInfo.label,
+      episodeCount: totalEp,
+      listenedCount: totalListened,
+      completedCount: totalCompleted,
+      lastListened: latest,
+      lastShiurProgress: latestSeries.lastShiurProgress,
+      isGroup: true,
+    });
+  }
+
+  for (const sp of ungrouped) {
+    cards.push({
+      slug: sp.slug,
+      name: sp.name,
+      episodeCount: sp.episodeCount,
+      listenedCount: sp.listenedCount,
+      completedCount: sp.completedCount,
+      lastListened: sp.lastListened,
+      lastShiurProgress: sp.lastShiurProgress,
+      isGroup: false,
+    });
+  }
+
+  cards.sort((a, b) => new Date(b.lastListened).getTime() - new Date(a.lastListened).getTime());
+
+  // Recently played individual shiurim
+  const recentShiurim: RecentShiur[] = entries
+    .sort((a, b) => new Date(b.lastListened).getTime() - new Date(a.lastListened).getTime())
+    .slice(0, 5)
+    .map((p) => {
+      const seriesInfo = allSeries.find((s) => s.slug === p.seriesSlug);
+      let seriesName = seriesInfo?.name || "";
+      if (seriesInfo?.group) {
+        const g = groupMap.get(seriesInfo.group);
+        if (g) seriesName = `${g.label} — ${seriesName}`;
+      }
+      return {
+        shiurId: p.shiurId,
+        seriesSlug: p.seriesSlug || "",
+        seriesName,
+        progress: p.duration > 0 ? Math.min(100, Math.round((p.currentTime / p.duration) * 100)) : 0,
+        lastListened: p.lastListened,
+        completed: p.completed,
+      };
+    });
+
+  const streak = computeStreak(entries);
 
   const stats: LearningStats = {
     totalShiurim: entries.length,
@@ -85,9 +232,10 @@ function computeData(allSeries: SeriesInfo[]) {
     inProgressShiurim: inProgress.length,
     seriesStarted: seriesMap.size,
     totalMinutes: Math.round(totalSeconds / 60),
+    streak,
   };
 
-  return { stats, seriesProgress };
+  return { stats, cards, recentShiurim };
 }
 
 function formatRelativeTime(isoDate: string): string {
@@ -114,28 +262,38 @@ const fadeUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
-export default function MyLearningClient({ allSeries }: { allSeries: SeriesInfo[] }) {
+const TABS: { id: TabId; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "in-progress", label: "In Progress" },
+  { id: "completed", label: "Completed" },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Component                                                          */
+/* ------------------------------------------------------------------ */
+
+export default function MyLearningClient({ allSeries, groups }: { allSeries: SeriesInfo[]; groups: GroupInfo[] }) {
   const { user, loading: authLoading } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [stats, setStats] = useState<LearningStats>({ totalShiurim: 0, completedShiurim: 0, inProgressShiurim: 0, seriesStarted: 0, totalMinutes: 0 });
-  const [seriesProgress, setSeriesProgress] = useState<SeriesWithProgress[]>([]);
+  const [stats, setStats] = useState<LearningStats>({ totalShiurim: 0, completedShiurim: 0, inProgressShiurim: 0, seriesStarted: 0, totalMinutes: 0, streak: 0 });
+  const [cards, setCards] = useState<GroupedSeriesCard[]>([]);
+  const [recentShiurim, setRecentShiurim] = useState<RecentShiur[]>([]);
   const [ready, setReady] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabId>("all");
 
-  // Compute data from localStorage
   const refresh = useCallback(() => {
-    const data = computeData(allSeries);
+    const data = computeData(allSeries, groups);
     setStats(data.stats);
-    setSeriesProgress(data.seriesProgress);
-  }, [allSeries]);
+    setCards(data.cards);
+    setRecentShiurim(data.recentShiurim);
+  }, [allSeries, groups]);
 
-  // Load local progress immediately on mount — don't wait for auth
   useEffect(() => {
     refresh();
     setReady(true);
   }, [refresh]);
 
-  // When auth resolves AND user is signed in, sync from Firestore then recompute
   useEffect(() => {
     if (authLoading || !user) return;
     let cancelled = false;
@@ -151,7 +309,12 @@ export default function MyLearningClient({ allSeries }: { allSeries: SeriesInfo[
     return () => { cancelled = true; };
   }, [authLoading, user, refresh]);
 
-  // Show a minimal skeleton if we haven't even read localStorage yet (one frame at most)
+  const filteredCards = useMemo(() => {
+    if (activeTab === "all") return cards;
+    if (activeTab === "in-progress") return cards.filter((c) => c.completedCount < c.episodeCount);
+    return cards.filter((c) => c.completedCount >= c.episodeCount && c.episodeCount > 0);
+  }, [cards, activeTab]);
+
   if (!ready) {
     return (
       <main className="min-h-screen bg-bg-light flex items-center justify-center">
@@ -163,7 +326,7 @@ export default function MyLearningClient({ allSeries }: { allSeries: SeriesInfo[
     );
   }
 
-  const hasProgress = seriesProgress.length > 0;
+  const hasProgress = cards.length > 0;
 
   return (
     <main className="min-h-screen bg-bg-light">
@@ -229,43 +392,105 @@ export default function MyLearningClient({ allSeries }: { allSeries: SeriesInfo[
                 ))}
               </div>
 
-              {/* Series Progress Cards */}
-              <h2 className="text-navy font-bold text-2xl mb-6">Continue Learning</h2>
-              <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.08 } } }} className="space-y-4">
-                {seriesProgress.map((s) => {
-                  const pct = Math.round((s.completedCount / s.episodeCount) * 100);
-                  return (
-                    <motion.div key={s.slug} variants={fadeUp}>
-                      <Link href={`/shiurim/${s.slug}`}
-                        className="block bg-white border border-primary/15 rounded-xl p-6 shadow-sm hover:shadow-md hover:border-primary/30 transition-all group">
-                        <div className="flex items-center justify-between gap-4 mb-4">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-navy font-bold text-xl group-hover:text-primary transition-colors">{s.name}</h3>
-                            <p className="text-navy/50 text-sm mt-1">
-                              <span className="font-semibold text-navy/70">{s.completedCount}</span> / {s.episodeCount} shiurim completed
-                              <span className="text-navy/30 mx-2">&middot;</span>
-                              Last listened {formatRelativeTime(s.lastListened)}
-                            </p>
-                          </div>
-                          <span className="inline-flex items-center gap-2 bg-primary text-white text-sm font-semibold rounded-xl px-5 py-2.5 shrink-0 shadow-sm group-hover:bg-primary-light transition-colors">
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                            Continue
-                          </span>
-                        </div>
-                        <div className="h-2.5 bg-navy/8 rounded-full overflow-hidden">
-                          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
-                        </div>
-                        <div className="flex items-center justify-between mt-2">
-                          <p className="text-navy/40 text-xs">{pct}% complete</p>
-                          {s.lastShiurProgress > 0 && s.lastShiurProgress < 100 && (
-                            <p className="text-primary text-xs font-medium">Current shiur: {s.lastShiurProgress}% listened</p>
+              {/* Recently Played */}
+              {recentShiurim.length > 0 && (
+                <div className="mb-10">
+                  <h2 className="text-navy font-bold text-xl mb-4">Recently Played</h2>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {recentShiurim.map((rs) => (
+                      <Link
+                        key={rs.shiurId}
+                        href={`/shiurim/${rs.seriesSlug}`}
+                        className="bg-white border border-primary/15 rounded-xl p-4 shadow-sm hover:shadow-md hover:border-primary/30 transition-all group flex items-center gap-3"
+                      >
+                        <div className="shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          {rs.completed ? (
+                            <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                          ) : (
+                            <svg className="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
                           )}
                         </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-navy font-semibold text-sm truncate group-hover:text-primary transition-colors">{rs.shiurId.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</p>
+                          <p className="text-navy/40 text-xs truncate">{rs.seriesName}</p>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p className="text-primary text-xs font-semibold">{rs.completed ? "Done" : `${rs.progress}%`}</p>
+                          <p className="text-navy/30 text-[10px]">{formatRelativeTime(rs.lastListened)}</p>
+                        </div>
                       </Link>
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tabs */}
+              <div className="flex gap-1 mb-6 border-b border-navy/10">
+                {TABS.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`px-5 py-2.5 text-sm font-semibold transition-colors relative ${activeTab === tab.id
+                      ? "text-primary"
+                      : "text-navy/40 hover:text-navy/70"
+                      }`}
+                  >
+                    {tab.label}
+                    {activeTab === tab.id && (
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Series / Group Progress Cards */}
+              {filteredCards.length === 0 ? (
+                <div className="text-center py-16">
+                  <p className="text-navy/40 text-lg">
+                    {activeTab === "completed"
+                      ? "Keep going! You haven't finished a series yet."
+                      : activeTab === "in-progress"
+                        ? "No series in progress right now."
+                        : "No series to show."}
+                  </p>
+                </div>
+              ) : (
+                <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.08 } } }} className="space-y-4">
+                  {filteredCards.map((s) => {
+                    const pct = s.episodeCount > 0 ? Math.round((s.completedCount / s.episodeCount) * 100) : 0;
+                    return (
+                      <motion.div key={s.slug} variants={fadeUp}>
+                        <Link href={`/shiurim/${s.slug}`}
+                          className="block bg-white border border-primary/15 rounded-xl p-6 shadow-sm hover:shadow-md hover:border-primary/30 transition-all group">
+                          <div className="flex items-center justify-between gap-4 mb-4">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-navy font-bold text-xl group-hover:text-primary transition-colors">{s.name}</h3>
+                              <p className="text-navy/50 text-sm mt-1">
+                                <span className="font-semibold text-navy/70">{s.completedCount}</span> / {s.episodeCount} shiurim completed
+                                <span className="text-navy/30 mx-2">&middot;</span>
+                                Last listened {formatRelativeTime(s.lastListened)}
+                              </p>
+                            </div>
+                            <span className="inline-flex items-center gap-2 bg-primary text-white text-sm font-semibold rounded-xl px-5 py-2.5 shrink-0 shadow-sm group-hover:bg-primary-light transition-colors">
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                              Continue
+                            </span>
+                          </div>
+                          <div className="h-2.5 bg-navy/8 rounded-full overflow-hidden">
+                            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
+                          </div>
+                          <div className="flex items-center justify-between mt-2">
+                            <p className="text-navy/40 text-xs">{pct}% complete</p>
+                            {s.lastShiurProgress > 0 && s.lastShiurProgress < 100 && (
+                              <p className="text-primary text-xs font-medium">Current shiur: {s.lastShiurProgress}% listened</p>
+                            )}
+                          </div>
+                        </Link>
+                      </motion.div>
+                    );
+                  })}
+                </motion.div>
+              )}
 
               {/* Browse More */}
               <div className="mt-10 text-center">

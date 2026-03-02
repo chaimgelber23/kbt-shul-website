@@ -49,7 +49,7 @@ export default function ShiurimLanding({
 
   const isSearching = searchQuery.trim().length > 0;
 
-  // Find parsha shiurim for "This Week's Parsha"
+  // Find ALL parsha shiurim for "This Week's Parsha" (don't slice — we need the total count)
   const parshaShiurim = useMemo(() => {
     if (!currentParsha) return [];
     const lowerName = currentParsha.name.toLowerCase();
@@ -62,9 +62,10 @@ export default function ShiurimLanding({
           titleLower.includes(`parsha ${lowerName}`)
         );
       })
-      .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
-      .slice(0, 3);
+      .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
   }, [allShiurim, currentParsha]);
+
+  const displayedParshaShiurim = parshaShiurim.slice(0, 3);
 
   return (
     <main className="min-h-screen">
@@ -105,7 +106,7 @@ export default function ShiurimLanding({
             </motion.div>
             <motion.div variants={fadeUp} className="w-20 h-1 bg-primary mb-8" />
             <motion.div variants={stagger} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {parshaShiurim.map((shiur) => (
+              {displayedParshaShiurim.map((shiur) => (
                 <motion.div key={shiur.id} variants={fadeUp}>
                   <ShiurCard
                     shiur={shiur}
@@ -116,14 +117,16 @@ export default function ShiurimLanding({
                 </motion.div>
               ))}
             </motion.div>
-            <motion.div variants={fadeUp} className="mt-6 text-center">
-              <Link
-                href="/shiurim/parsha"
-                className="text-primary font-semibold hover:text-primary-light transition-colors text-sm"
-              >
-                View all Parsha shiurim &rarr;
-              </Link>
-            </motion.div>
+            {parshaShiurim.length > 3 && (
+              <motion.div variants={fadeUp} className="mt-6 text-center">
+                <Link
+                  href={`/shiurim/parsha?section=${encodeURIComponent(currentParsha!.name)}`}
+                  className="text-primary font-semibold hover:text-primary-light transition-colors text-sm"
+                >
+                  View all {parshaShiurim.length} shiurim on Parshas {currentParsha!.name} &rarr;
+                </Link>
+              </motion.div>
+            )}
           </div>
         </motion.section>
       )}

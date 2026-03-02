@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import type { Shiur, SortOrder, NavType, SeriesGroup } from "@/lib/types";
 import { PARSHIYOS_BY_SEFER } from "@/lib/categoryConfig";
@@ -44,6 +45,25 @@ export default function SeriesPageClient({
   const [selectedSubSection, setSelectedSubSection] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const { playShiur, playerState } = useAudioPlayer();
+  const searchParams = useSearchParams();
+
+  // Auto-select parsha from URL query param (e.g., ?section=Pekudei)
+  useEffect(() => {
+    if (series.navType !== "parsha") return;
+    const target = searchParams.get("section");
+    if (!target) return;
+    const lower = target.toLowerCase();
+    // Find which sefer contains this parsha
+    for (const sefer of navSections) {
+      const parshiyos = PARSHIYOS_BY_SEFER[sefer] || [];
+      const match = parshiyos.find((p) => p.toLowerCase() === lower);
+      if (match) {
+        setSelectedSection(sefer);
+        setSelectedSubSection(match);
+        break;
+      }
+    }
+  }, [series.navType, searchParams, navSections]);
 
   // Get recommended shiur based on progress
   const recommendedShiur = useMemo(() => {
@@ -160,21 +180,19 @@ export default function SeriesPageClient({
             {/* Sort/Filter buttons */}
             <button
               onClick={() => { setSortOrder("oldest"); handleSectionChange(null); }}
-              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                sortOrder === "oldest" && !selectedSection
+              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${sortOrder === "oldest" && !selectedSection
                   ? "bg-navy text-white shadow-md"
                   : "bg-white border border-navy/15 text-navy/70 hover:border-navy/30"
-              }`}
+                }`}
             >
               Start from Beginning
             </button>
             <button
               onClick={() => { setSortOrder("newest"); handleSectionChange(null); }}
-              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                sortOrder === "newest" && !selectedSection
+              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${sortOrder === "newest" && !selectedSection
                   ? "bg-navy text-white shadow-md"
                   : "bg-white border border-navy/15 text-navy/70 hover:border-navy/30"
-              }`}
+                }`}
             >
               Latest Shiur
             </button>
@@ -189,11 +207,10 @@ export default function SeriesPageClient({
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => handleSectionChange(null)}
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                    !selectedSection
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${!selectedSection
                       ? "bg-primary text-white"
                       : "bg-white border border-primary/20 text-navy/60 hover:border-primary/40"
-                  }`}
+                    }`}
                 >
                   All
                 </button>
@@ -201,11 +218,10 @@ export default function SeriesPageClient({
                   <button
                     key={section}
                     onClick={() => handleSectionChange(section)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                      selectedSection === section
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${selectedSection === section
                         ? "bg-primary text-white"
                         : "bg-white border border-primary/20 text-navy/60 hover:border-primary/40"
-                    }`}
+                      }`}
                   >
                     {section}
                   </button>
@@ -223,11 +239,10 @@ export default function SeriesPageClient({
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => handleSectionChange(null)}
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                    !selectedSection
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${!selectedSection
                       ? "bg-primary text-white"
                       : "bg-white border border-primary/20 text-navy/60 hover:border-primary/40"
-                  }`}
+                    }`}
                 >
                   All
                 </button>
@@ -235,11 +250,10 @@ export default function SeriesPageClient({
                   <button
                     key={section}
                     onClick={() => handleSectionChange(section)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                      selectedSection === section
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${selectedSection === section
                         ? "bg-primary text-white"
                         : "bg-white border border-primary/20 text-navy/60 hover:border-primary/40"
-                    }`}
+                      }`}
                   >
                     {section}
                   </button>
@@ -258,11 +272,10 @@ export default function SeriesPageClient({
               <div className="flex flex-wrap gap-2 mb-4">
                 <button
                   onClick={() => handleSectionChange(null)}
-                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
-                    !selectedSection
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${!selectedSection
                       ? "bg-navy text-white"
                       : "bg-white border border-navy/15 text-navy/60 hover:border-navy/30"
-                  }`}
+                    }`}
                 >
                   All Parshiyos
                 </button>
@@ -270,11 +283,10 @@ export default function SeriesPageClient({
                   <button
                     key={sefer}
                     onClick={() => handleSectionChange(sefer)}
-                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
-                      selectedSection === sefer
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${selectedSection === sefer
                         ? "bg-navy text-white"
                         : "bg-white border border-navy/15 text-navy/60 hover:border-navy/30"
-                    }`}
+                      }`}
                   >
                     {sefer}
                   </button>
@@ -286,11 +298,10 @@ export default function SeriesPageClient({
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setSelectedSubSection(null)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                      !selectedSubSection
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${!selectedSubSection
                         ? "bg-primary text-white"
                         : "bg-white border border-primary/20 text-navy/60 hover:border-primary/40"
-                    }`}
+                      }`}
                   >
                     All {selectedSection}
                   </button>
@@ -298,11 +309,10 @@ export default function SeriesPageClient({
                     <button
                       key={parsha}
                       onClick={() => { setSelectedSubSection(parsha); setVisibleCount(PAGE_SIZE); }}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                        selectedSubSection === parsha
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${selectedSubSection === parsha
                           ? "bg-primary text-white"
                           : "bg-white border border-primary/20 text-navy/60 hover:border-primary/40"
-                      }`}
+                        }`}
                     >
                       {parsha}
                     </button>
@@ -323,21 +333,19 @@ export default function SeriesPageClient({
               <span className="text-navy/50 text-sm">Sort:</span>
               <button
                 onClick={() => setSortOrder("newest")}
-                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                  sortOrder === "newest"
+                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${sortOrder === "newest"
                     ? "bg-navy text-white"
                     : "bg-white border border-navy/15 text-navy/60 hover:border-navy/30"
-                }`}
+                  }`}
               >
                 Newest
               </button>
               <button
                 onClick={() => setSortOrder("oldest")}
-                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                  sortOrder === "oldest"
+                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${sortOrder === "oldest"
                     ? "bg-navy text-white"
                     : "bg-white border border-navy/15 text-navy/60 hover:border-navy/30"
-                }`}
+                  }`}
               >
                 Oldest
               </button>
