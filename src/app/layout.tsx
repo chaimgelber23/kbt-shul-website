@@ -5,6 +5,8 @@ import { Analytics } from "@vercel/analytics/react";
 import AuthProvider from "@/components/AuthProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { AudioPlayerProvider } from "@/components/shiurim/AudioPlayerProvider";
+import AudioPlayerBar from "@/components/shiurim/AudioPlayerBar";
 
 const manrope = Manrope({
   variable: "--font-display",
@@ -50,10 +52,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${manrope.variable} ${playfair.variable} ${frankRuhl.variable} antialiased`}>
         <AuthProvider>
-          <Navbar />
-          {children}
-          <Footer />
-          <Analytics />
+          <AudioPlayerProvider>
+            <Navbar />
+            {children}
+            <Footer />
+            <AudioPlayerBar />
+            <Analytics />
+          </AudioPlayerProvider>
         </AuthProvider>
       </body>
     </html>

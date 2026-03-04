@@ -76,6 +76,8 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       if (shiur) {
         saveShiurProgress({
           shiurId: shiur.id,
+          title: shiur.title,
+          audioUrl: shiur.audioUrl,
           seriesSlug: seriesSlugRef.current || undefined,
           currentTime: audio.duration || 0,
           duration: audio.duration || 0,
@@ -142,6 +144,8 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
 
           saveShiurProgress({
             shiurId: shiur.id,
+            title: shiur.title,
+            audioUrl: shiur.audioUrl,
             seriesSlug: seriesSlugRef.current || undefined,
             currentTime,
             duration,
