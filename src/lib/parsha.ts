@@ -1,6 +1,10 @@
+import { canonicalParsha } from "./categoryConfig";
+
 /**
  * Fetch this week's parsha from the Hebcal API (Jerusalem timezone).
  * Returns the parsha name (e.g., "Terumah") and Hebrew name.
+ * The English name is normalized to our canonical transliteration
+ * (e.g., Hebcal's "Ki Tisa" → our "Ki Sisa").
  */
 export async function fetchCurrentParsha(): Promise<{
   name: string;
@@ -22,7 +26,8 @@ export async function fetchCurrentParsha(): Promise<{
 
     // Extract parsha name: "Parashat Terumah" → "Terumah"
     // Handle double parshiyos: "Parashat Vayakhel-Pekudei" → "Vayakhel-Pekudei"
-    const name = parashat.title.replace(/^Parashat\s+/, "");
+    const rawName = parashat.title.replace(/^Parashat\s+/, "");
+    const name = canonicalParsha(rawName);
     const hebrew = parashat.hebrew?.replace(/^פרשת\s+/, "") || "";
 
     return { name, hebrew };
@@ -30,3 +35,4 @@ export async function fetchCurrentParsha(): Promise<{
     return null;
   }
 }
+

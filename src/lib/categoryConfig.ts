@@ -76,25 +76,67 @@ function lookupSefer(parshaName: string): string | undefined {
   return PARSHA_TO_SEFER[parshaName.toLowerCase()];
 }
 
-/** Find the canonical parsha name from a variant spelling */
-function canonicalParsha(parshaName: string): string {
-  const lower = parshaName.toLowerCase();
-  // Check if it's in our lookup
-  if (PARSHA_TO_SEFER[lower]) {
-    const sefer = PARSHA_TO_SEFER[lower];
-    // Find the canonical name from PARSHIYOS_BY_SEFER
-    const parshiyos = PARSHIYOS_BY_SEFER[sefer];
-    if (parshiyos) {
-      for (const p of parshiyos) {
-        if (p.toLowerCase() === lower || PARSHA_TO_SEFER[p.toLowerCase()] === sefer) {
-          // Check common variants
-          if (lower.startsWith(p.toLowerCase().slice(0, 3))) return p;
-        }
-      }
+/**
+ * Explicit mapping: variant spelling (lowercase) → canonical parsha name.
+ * Each canonical name maps to itself, and all known transliteration variants
+ * map to the same canonical. This ensures "ki tisa" → "Ki Sisa", etc.
+ */
+const VARIANT_TO_CANONICAL: Record<string, string> = {};
+
+// 1) Every canonical name maps to itself
+for (const parshiyos of Object.values(PARSHIYOS_BY_SEFER)) {
+  for (const p of parshiyos) {
+    VARIANT_TO_CANONICAL[p.toLowerCase()] = p;
+  }
+}
+
+// 2) Every variant in PARSHA_TO_SEFER maps to the canonical in the same sefer.
+//    We find the right canonical by checking: among all canonical names in that
+//    sefer, which one is ALSO a key in PARSHA_TO_SEFER? Since variants of the
+//    same parsha are listed in a block, we match by the parsha whose canonical
+//    lowercase is closest to (or identical to) one of the variants on the same line.
+//    Reliable approach: for each variant, the canonical is the parsha in the sefer
+//    whose own lowercase is also in PARSHA_TO_SEFER with the same sefer, AND
+//    we haven't already assigned this variant to a different canonical.
+//
+//    Since the PARSHA_TO_SEFER object lists variants grouped by parsha (on the
+//    same source line), we leverage the source-order: variants appear right after
+//    their canonical. We process in order and track which canonical we're "in".
+(function buildVariantMap() {
+  const canonicalSet = new Set(Object.keys(VARIANT_TO_CANONICAL));
+  let currentCanonical: string | null = null;
+
+  for (const variant of Object.keys(PARSHA_TO_SEFER)) {
+    if (canonicalSet.has(variant)) {
+      // This IS a canonical name — set it as current context
+      currentCanonical = VARIANT_TO_CANONICAL[variant];
+    } else if (currentCanonical) {
+      // This is a variant of the current canonical
+      VARIANT_TO_CANONICAL[variant] = currentCanonical;
     }
   }
-  // Fall back to title case of what was given
-  return parshaName.charAt(0).toUpperCase() + parshaName.slice(1);
+})();
+
+/** Find the canonical parsha name from a variant spelling */
+export function canonicalParsha(parshaName: string): string {
+  const lower = parshaName.toLowerCase();
+  return VARIANT_TO_CANONICAL[lower] ||
+    parshaName.charAt(0).toUpperCase() + parshaName.slice(1);
+}
+
+/**
+ * Get all known lowercase variant spellings for a canonical parsha name.
+ * E.g., "Ki Sisa" → ["ki sisa", "ki tisa", "ki sissa"]
+ */
+export function getParshaVariants(canonicalName: string): string[] {
+  const variants: string[] = [];
+  for (const [variant, canonical] of Object.entries(VARIANT_TO_CANONICAL)) {
+    if (canonical === canonicalName) variants.push(variant);
+  }
+  // Always include the canonical itself
+  const lower = canonicalName.toLowerCase();
+  if (!variants.includes(lower)) variants.push(lower);
+  return variants;
 }
 
 function extractParshaLevels(title: string): [string | undefined, string | undefined] {

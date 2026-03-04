@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import type { Shiur } from "@/lib/types";
+import { getParshaVariants } from "@/lib/categoryConfig";
 import ShiurCard from "./ShiurCard";
 
 const fadeUp = {
@@ -31,17 +32,18 @@ export default function ThisWeeksParsha({
   isPlaying: boolean;
   onViewAll: () => void;
 }) {
-  // Find shiurim matching this parsha (check subLevel2 or title)
+  // Find shiurim matching this parsha (check subLevel2 or title, variant-aware)
   const parshaShiurim = useMemo(() => {
     const lowerName = parshaName.toLowerCase();
+    const variants = getParshaVariants(parshaName);
     return shiurim.filter((s) => {
       // Match by subLevel2 (canonical parsha name from our categorization)
       if (s.subLevel2?.toLowerCase() === lowerName) return true;
-      // Also match by title containing "Parshas <name>"
+      // Also match by title containing any variant spelling
       const titleLower = s.title.toLowerCase();
-      return (
-        titleLower.includes(`parshas ${lowerName}`) ||
-        titleLower.includes(`parsha ${lowerName}`)
+      return variants.some((v) =>
+        titleLower.includes(`parshas ${v}`) ||
+        titleLower.includes(`parsha ${v}`)
       );
     });
   }, [shiurim, parshaName]);

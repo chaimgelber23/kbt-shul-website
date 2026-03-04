@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import type { Shiur, SeriesStats } from "@/lib/types";
+import { getParshaVariants } from "@/lib/categoryConfig";
 import { useAudioPlayer } from "./AudioPlayerProvider";
 import ShiurimHero from "./ShiurimHero";
 import SearchBar from "./SearchBar";
@@ -53,13 +54,17 @@ export default function ShiurimLanding({
   const parshaShiurim = useMemo(() => {
     if (!currentParsha) return [];
     const lowerName = currentParsha.name.toLowerCase();
+    // Get all known spelling variants (e.g., "ki sisa" → ["ki sisa", "ki tisa", "ki sissa"])
+    const variants = getParshaVariants(currentParsha.name);
     return allShiurim
       .filter((s) => {
+        // Match by canonical subLevel2
         if (s.subLevel2?.toLowerCase() === lowerName) return true;
+        // Also match by title containing any variant spelling
         const titleLower = s.title.toLowerCase();
-        return (
-          titleLower.includes(`parshas ${lowerName}`) ||
-          titleLower.includes(`parsha ${lowerName}`)
+        return variants.some((v) =>
+          titleLower.includes(`parshas ${v}`) ||
+          titleLower.includes(`parsha ${v}`)
         );
       })
       .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());

@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import type { Shiur, SortOrder, NavType, SeriesGroup } from "@/lib/types";
-import { PARSHIYOS_BY_SEFER } from "@/lib/categoryConfig";
+import { PARSHIYOS_BY_SEFER, canonicalParsha, getParshaVariants } from "@/lib/categoryConfig";
 import { useAudioPlayer } from "./AudioPlayerProvider";
 import { getRecommendedShiur, getNextShiur } from "@/lib/progress";
 import SeriesHero from "./SeriesHero";
@@ -47,12 +47,14 @@ export default function SeriesPageClient({
   const { playShiur, playerState } = useAudioPlayer();
   const searchParams = useSearchParams();
 
-  // Auto-select parsha from URL query param (e.g., ?section=Pekudei)
+  // Auto-select parsha from URL query param (e.g., ?section=Pekudei or ?section=Ki+Tisa)
   useEffect(() => {
     if (series.navType !== "parsha") return;
     const target = searchParams.get("section");
     if (!target) return;
-    const lower = target.toLowerCase();
+    // Normalize variant spellings (e.g., "Ki Tisa" → "Ki Sisa")
+    const canonical = canonicalParsha(target);
+    const lower = canonical.toLowerCase();
     // Find which sefer contains this parsha
     for (const sefer of navSections) {
       const parshiyos = PARSHIYOS_BY_SEFER[sefer] || [];
@@ -81,26 +83,28 @@ export default function SeriesPageClient({
     let filtered = [...shiurim];
 
     if (selectedSection && series.navType === "parsha") {
-      // For parsha, filter by parsha name in title
+      // For parsha, filter by parsha name in title (variant-aware)
       if (selectedSubSection) {
-        const lower = selectedSubSection.toLowerCase();
+        const variants = getParshaVariants(selectedSubSection);
         filtered = filtered.filter((s) => {
           const titleLower = s.title.toLowerCase();
-          return (
-            titleLower.includes(`parshas ${lower}`) ||
-            titleLower.includes(`parsha ${lower}`)
+          return variants.some((v) =>
+            titleLower.includes(`parshas ${v}`) ||
+            titleLower.includes(`parsha ${v}`)
           );
         });
       } else {
-        // Filter by all parshiyos in selected sefer
+        // Filter by all parshiyos in selected sefer (variant-aware)
         const parshiyos = PARSHIYOS_BY_SEFER[selectedSection] || [];
         filtered = filtered.filter((s) => {
           const titleLower = s.title.toLowerCase();
-          return parshiyos.some(
-            (p) =>
-              titleLower.includes(`parshas ${p.toLowerCase()}`) ||
-              titleLower.includes(`parsha ${p.toLowerCase()}`)
-          );
+          return parshiyos.some((p) => {
+            const variants = getParshaVariants(p);
+            return variants.some((v) =>
+              titleLower.includes(`parshas ${v}`) ||
+              titleLower.includes(`parsha ${v}`)
+            );
+          });
         });
       }
     } else if (selectedSection && series.navType === "perek") {
@@ -181,8 +185,8 @@ export default function SeriesPageClient({
             <button
               onClick={() => { setSortOrder("oldest"); handleSectionChange(null); }}
               className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${sortOrder === "oldest" && !selectedSection
-                  ? "bg-navy text-white shadow-md"
-                  : "bg-white border border-navy/15 text-navy/70 hover:border-navy/30"
+                ? "bg-navy text-white shadow-md"
+                : "bg-white border border-navy/15 text-navy/70 hover:border-navy/30"
                 }`}
             >
               Start from Beginning
@@ -190,8 +194,8 @@ export default function SeriesPageClient({
             <button
               onClick={() => { setSortOrder("newest"); handleSectionChange(null); }}
               className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${sortOrder === "newest" && !selectedSection
-                  ? "bg-navy text-white shadow-md"
-                  : "bg-white border border-navy/15 text-navy/70 hover:border-navy/30"
+                ? "bg-navy text-white shadow-md"
+                : "bg-white border border-navy/15 text-navy/70 hover:border-navy/30"
                 }`}
             >
               Latest Shiur
@@ -208,8 +212,8 @@ export default function SeriesPageClient({
                 <button
                   onClick={() => handleSectionChange(null)}
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${!selectedSection
-                      ? "bg-primary text-white"
-                      : "bg-white border border-primary/20 text-navy/60 hover:border-primary/40"
+                    ? "bg-primary text-white"
+                    : "bg-white border border-primary/20 text-navy/60 hover:border-primary/40"
                     }`}
                 >
                   All
@@ -219,8 +223,8 @@ export default function SeriesPageClient({
                     key={section}
                     onClick={() => handleSectionChange(section)}
                     className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${selectedSection === section
-                        ? "bg-primary text-white"
-                        : "bg-white border border-primary/20 text-navy/60 hover:border-primary/40"
+                      ? "bg-primary text-white"
+                      : "bg-white border border-primary/20 text-navy/60 hover:border-primary/40"
                       }`}
                   >
                     {section}
@@ -240,8 +244,8 @@ export default function SeriesPageClient({
                 <button
                   onClick={() => handleSectionChange(null)}
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${!selectedSection
-                      ? "bg-primary text-white"
-                      : "bg-white border border-primary/20 text-navy/60 hover:border-primary/40"
+                    ? "bg-primary text-white"
+                    : "bg-white border border-primary/20 text-navy/60 hover:border-primary/40"
                     }`}
                 >
                   All
@@ -251,8 +255,8 @@ export default function SeriesPageClient({
                     key={section}
                     onClick={() => handleSectionChange(section)}
                     className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${selectedSection === section
-                        ? "bg-primary text-white"
-                        : "bg-white border border-primary/20 text-navy/60 hover:border-primary/40"
+                      ? "bg-primary text-white"
+                      : "bg-white border border-primary/20 text-navy/60 hover:border-primary/40"
                       }`}
                   >
                     {section}
@@ -273,8 +277,8 @@ export default function SeriesPageClient({
                 <button
                   onClick={() => handleSectionChange(null)}
                   className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${!selectedSection
-                      ? "bg-navy text-white"
-                      : "bg-white border border-navy/15 text-navy/60 hover:border-navy/30"
+                    ? "bg-navy text-white"
+                    : "bg-white border border-navy/15 text-navy/60 hover:border-navy/30"
                     }`}
                 >
                   All Parshiyos
@@ -284,8 +288,8 @@ export default function SeriesPageClient({
                     key={sefer}
                     onClick={() => handleSectionChange(sefer)}
                     className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${selectedSection === sefer
-                        ? "bg-navy text-white"
-                        : "bg-white border border-navy/15 text-navy/60 hover:border-navy/30"
+                      ? "bg-navy text-white"
+                      : "bg-white border border-navy/15 text-navy/60 hover:border-navy/30"
                       }`}
                   >
                     {sefer}
@@ -299,8 +303,8 @@ export default function SeriesPageClient({
                   <button
                     onClick={() => setSelectedSubSection(null)}
                     className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${!selectedSubSection
-                        ? "bg-primary text-white"
-                        : "bg-white border border-primary/20 text-navy/60 hover:border-primary/40"
+                      ? "bg-primary text-white"
+                      : "bg-white border border-primary/20 text-navy/60 hover:border-primary/40"
                       }`}
                   >
                     All {selectedSection}
@@ -310,8 +314,8 @@ export default function SeriesPageClient({
                       key={parsha}
                       onClick={() => { setSelectedSubSection(parsha); setVisibleCount(PAGE_SIZE); }}
                       className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${selectedSubSection === parsha
-                          ? "bg-primary text-white"
-                          : "bg-white border border-primary/20 text-navy/60 hover:border-primary/40"
+                        ? "bg-primary text-white"
+                        : "bg-white border border-primary/20 text-navy/60 hover:border-primary/40"
                         }`}
                     >
                       {parsha}
@@ -334,8 +338,8 @@ export default function SeriesPageClient({
               <button
                 onClick={() => setSortOrder("newest")}
                 className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${sortOrder === "newest"
-                    ? "bg-navy text-white"
-                    : "bg-white border border-navy/15 text-navy/60 hover:border-navy/30"
+                  ? "bg-navy text-white"
+                  : "bg-white border border-navy/15 text-navy/60 hover:border-navy/30"
                   }`}
               >
                 Newest
@@ -343,8 +347,8 @@ export default function SeriesPageClient({
               <button
                 onClick={() => setSortOrder("oldest")}
                 className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${sortOrder === "oldest"
-                    ? "bg-navy text-white"
-                    : "bg-white border border-navy/15 text-navy/60 hover:border-navy/30"
+                  ? "bg-navy text-white"
+                  : "bg-white border border-navy/15 text-navy/60 hover:border-navy/30"
                   }`}
               >
                 Oldest
