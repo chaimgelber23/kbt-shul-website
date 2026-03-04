@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getSeriesShiurim, getSeriesNavSections } from "@/lib/seriesData";
 import { getSeriesBySlug, getAllSlugs } from "@/lib/seriesConfig";
@@ -39,17 +40,20 @@ export default async function SeriesPage({
   ]);
 
   return (
-    <SeriesPageClient
-      series={{
-        slug: series.slug,
-        name: series.name,
-        description: series.description,
-        group: series.group,
-        navType: series.navType,
-        sortDefault: series.sortDefault || "newest",
-      }}
-      shiurim={shiurim}
-      navSections={navSections}
-    />
+    <Suspense>
+      <SeriesPageClient
+        series={{
+          slug: series.slug,
+          name: series.name,
+          description: series.description,
+          group: series.group,
+          navType: series.navType,
+          sortDefault: series.sortDefault || "newest",
+        }}
+        shiurim={shiurim}
+        navSections={navSections}
+      />
+    </Suspense>
   );
 }
+
