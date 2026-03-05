@@ -36,6 +36,7 @@ interface SeriesWithProgress {
   completedCount: number;
   lastListened: string;
   lastShiurProgress: number;
+  lastShiurTitle: string;
   group: string | null;
 }
 
@@ -47,6 +48,7 @@ interface GroupedSeriesCard {
   completedCount: number;
   lastListened: string;
   lastShiurProgress: number;
+  lastShiurTitle: string;
   isGroup: boolean;
 }
 
@@ -110,7 +112,11 @@ function computeStreak(entries: { lastListened: string }[]): number {
   return streak;
 }
 
-function computeData(allSeries: SeriesInfo[], groups: GroupInfo[]) {
+function computeData(
+  allSeries: SeriesInfo[],
+  groups: GroupInfo[],
+  shiurLookup: Record<string, { title: string; audioUrl: string }>
+) {
   const all = getAllProgress();
   const entries = Object.values(all).filter((p) => p.currentTime > 10);
   const completed = entries.filter((p) => p.completed);
@@ -142,6 +148,11 @@ function computeData(allSeries: SeriesInfo[], groups: GroupInfo[]) {
   for (const series of allSeries) {
     const data = seriesMap.get(series.slug);
     if (!data) continue;
+    const progressEntry = all[data.lastShiurId];
+    const lastShiurTitle =
+      progressEntry?.title ||
+      shiurLookup[data.lastShiurId]?.title ||
+      "";
     seriesProgress.push({
       slug: series.slug,
       name: series.name,
@@ -150,6 +161,7 @@ function computeData(allSeries: SeriesInfo[], groups: GroupInfo[]) {
       completedCount: data.completed.size,
       lastListened: data.lastListened,
       lastShiurProgress: getProgressPercentage(data.lastShiurId),
+      lastShiurTitle,
       group: series.group,
     });
   }
@@ -189,6 +201,7 @@ function computeData(allSeries: SeriesInfo[], groups: GroupInfo[]) {
       completedCount: totalCompleted,
       lastListened: latest,
       lastShiurProgress: latestSeries.lastShiurProgress,
+      lastShiurTitle: latestSeries.lastShiurTitle,
       isGroup: true,
     });
   }
@@ -202,6 +215,7 @@ function computeData(allSeries: SeriesInfo[], groups: GroupInfo[]) {
       completedCount: sp.completedCount,
       lastListened: sp.lastListened,
       lastShiurProgress: sp.lastShiurProgress,
+      lastShiurTitle: sp.lastShiurTitle,
       isGroup: false,
     });
   }
@@ -219,12 +233,14 @@ function computeData(allSeries: SeriesInfo[], groups: GroupInfo[]) {
         const g = groupMap.get(seriesInfo.group);
         if (g) seriesName = `${g.label} — ${seriesName}`;
       }
-      // Use stored title, fall back to reformatted ID
-      const title = p.title || p.shiurId.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      // Use stored title, then server lookup, then fallback
+      const looked = shiurLookup[p.shiurId];
+      const title = p.title || looked?.title || "";
+      const audioUrl = p.audioUrl || looked?.audioUrl || "";
       return {
         shiurId: p.shiurId,
         title,
-        audioUrl: p.audioUrl || "",
+        audioUrl,
         seriesSlug: p.seriesSlug || "",
         seriesName,
         progress: p.duration > 0 ? Math.min(100, Math.round((p.currentTime / p.duration) * 100)) : 0,
@@ -283,7 +299,15 @@ const TABS: { id: TabId; label: string }[] = [
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-export default function MyLearningClient({ allSeries, groups }: { allSeries: SeriesInfo[]; groups: GroupInfo[] }) {
+export default function MyLearningClient({
+  allSeries,
+  groups,
+  shiurLookup,
+}: {
+  allSeries: SeriesInfo[];
+  groups: GroupInfo[];
+  shiurLookup: Record<string, { title: string; audioUrl: string }>;
+}) {
   const { user, loading: authLoading } = useAuth();
   const { playShiur, playerState } = useAudioPlayer();
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -295,11 +319,11 @@ export default function MyLearningClient({ allSeries, groups }: { allSeries: Ser
   const [activeTab, setActiveTab] = useState<TabId>("all");
 
   const refresh = useCallback(() => {
-    const data = computeData(allSeries, groups);
+    const data = computeData(allSeries, groups, shiurLookup);
     setStats(data.stats);
     setCards(data.cards);
     setRecentShiurim(data.recentShiurim);
-  }, [allSeries, groups]);
+  }, [allSeries, groups, shiurLookup]);
 
   useEffect(() => {
     refresh();
@@ -539,6 +563,11 @@ export default function MyLearningClient({ allSeries, groups }: { allSeries: Ser
                           <div className="flex items-center justify-between gap-4 mb-4">
                             <div className="flex-1 min-w-0">
                               <h3 className="text-navy font-bold text-xl group-hover:text-primary transition-colors">{s.name}</h3>
+                              {s.lastShiurTitle && (
+                                <p className="text-primary/80 text-sm font-medium mt-0.5 truncate">
+                                  ↩ {s.lastShiurTitle}
+                                </p>
+                              )}
                               <p className="text-navy/50 text-sm mt-1">
                                 <span className="font-semibold text-navy/70">{s.completedCount}</span> / {s.episodeCount} shiurim completed
                                 <span className="text-navy/30 mx-2">&middot;</span>
