@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useAuth } from "@/components/AuthProvider";
@@ -74,7 +74,7 @@ interface LearningStats {
   streak: number;
 }
 
-type TabId = "all" | "in-progress" | "completed";
+type TabId = "all" | "in-progress" | "completed" | "series";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -112,6 +112,35 @@ function computeStreak(entries: { lastListened: string }[]): number {
   return streak;
 }
 
+function buildRecentShiur(
+  p: ReturnType<typeof getAllProgress>[string],
+  allSeries: SeriesInfo[],
+  groupMap: Map<string, GroupInfo>,
+  shiurLookup: Record<string, { title: string; audioUrl: string }>
+): RecentShiur {
+  const seriesInfo = allSeries.find((s) => s.slug === p.seriesSlug);
+  let seriesName = seriesInfo?.name || "";
+  if (seriesInfo?.group) {
+    const g = groupMap.get(seriesInfo.group);
+    if (g) seriesName = `${g.label} — ${seriesName}`;
+  }
+  const looked = shiurLookup[p.shiurId];
+  const title = p.title || looked?.title || "";
+  const audioUrl = p.audioUrl || looked?.audioUrl || "";
+  return {
+    shiurId: p.shiurId,
+    title,
+    audioUrl,
+    seriesSlug: p.seriesSlug || "",
+    seriesName,
+    progress: p.duration > 0 ? Math.min(100, Math.round((p.currentTime / p.duration) * 100)) : 0,
+    currentTime: p.currentTime,
+    duration: p.duration,
+    lastListened: p.lastListened,
+    completed: p.completed,
+  };
+}
+
 function computeData(
   allSeries: SeriesInfo[],
   groups: GroupInfo[],
@@ -122,6 +151,9 @@ function computeData(
   const completed = entries.filter((p) => p.completed);
   const inProgress = entries.filter((p) => !p.completed);
   const totalSeconds = entries.reduce((acc, p) => acc + (p.currentTime || 0), 0);
+
+  const groupMap = new Map<string, GroupInfo>();
+  for (const g of groups) groupMap.set(g.id, g);
 
   const seriesMap = new Map<string, { listened: Set<string>; completed: Set<string>; lastListened: string; lastShiurId: string }>();
   for (const p of entries) {
@@ -166,10 +198,7 @@ function computeData(
     });
   }
 
-  // Consolidate grouped series
-  const groupMap = new Map<string, GroupInfo>();
-  for (const g of groups) groupMap.set(g.id, g);
-
+  // Consolidate grouped series into cards
   const groupBuckets = new Map<string, SeriesWithProgress[]>();
   const ungrouped: SeriesWithProgress[] = [];
 
@@ -222,34 +251,16 @@ function computeData(
 
   cards.sort((a, b) => new Date(b.lastListened).getTime() - new Date(a.lastListened).getTime());
 
-  // Recently played individual shiurim
-  const recentShiurim: RecentShiur[] = entries
-    .sort((a, b) => new Date(b.lastListened).getTime() - new Date(a.lastListened).getTime())
-    .slice(0, 8)
-    .map((p) => {
-      const seriesInfo = allSeries.find((s) => s.slug === p.seriesSlug);
-      let seriesName = seriesInfo?.name || "";
-      if (seriesInfo?.group) {
-        const g = groupMap.get(seriesInfo.group);
-        if (g) seriesName = `${g.label} — ${seriesName}`;
-      }
-      // Use stored title, then server lookup, then fallback
-      const looked = shiurLookup[p.shiurId];
-      const title = p.title || looked?.title || "";
-      const audioUrl = p.audioUrl || looked?.audioUrl || "";
-      return {
-        shiurId: p.shiurId,
-        title,
-        audioUrl,
-        seriesSlug: p.seriesSlug || "",
-        seriesName,
-        progress: p.duration > 0 ? Math.min(100, Math.round((p.currentTime / p.duration) * 100)) : 0,
-        currentTime: p.currentTime,
-        duration: p.duration,
-        lastListened: p.lastListened,
-        completed: p.completed,
-      };
-    });
+  // All enriched shiurim sorted by lastListened (used for tab lists)
+  const sortedEntries = [...entries].sort(
+    (a, b) => new Date(b.lastListened).getTime() - new Date(a.lastListened).getTime()
+  );
+  const allShiurimList: RecentShiur[] = sortedEntries.map((p) =>
+    buildRecentShiur(p, allSeries, groupMap, shiurLookup)
+  );
+
+  // Top 8 for "Recently Played"
+  const recentShiurim = allShiurimList.slice(0, 8);
 
   const streak = computeStreak(entries);
 
@@ -262,7 +273,7 @@ function computeData(
     streak,
   };
 
-  return { stats, cards, recentShiurim };
+  return { stats, cards, recentShiurim, allShiurimList };
 }
 
 function formatRelativeTime(isoDate: string): string {
@@ -285,15 +296,113 @@ function formatMinutes(mins: number): string {
 }
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: "all", label: "All" },
+  { id: "all", label: "All Shiurim" },
   { id: "in-progress", label: "In Progress" },
   { id: "completed", label: "Completed" },
+  { id: "series", label: "By Series" },
 ];
+
+/* ------------------------------------------------------------------ */
+/*  Shiur card (reusable inside this file)                            */
+/* ------------------------------------------------------------------ */
+
+function ShiurListCard({
+  rs,
+  isCurrentlyPlaying,
+  isCurrent,
+  onPlay,
+}: {
+  rs: RecentShiur;
+  isCurrentlyPlaying: boolean;
+  isCurrent: boolean;
+  onPlay: () => void;
+}) {
+  return (
+    <div
+      className={`bg-white border rounded-xl p-4 shadow-sm transition-all ${
+        isCurrent
+          ? "border-primary/40 ring-1 ring-primary/20"
+          : "border-primary/15 hover:border-primary/30 hover:shadow-md"
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        {/* Play/Pause button */}
+        <button
+          onClick={onPlay}
+          disabled={!rs.audioUrl}
+          aria-label={isCurrentlyPlaying ? "Pause" : rs.completed ? "Replay" : "Resume"}
+          className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{
+            background: rs.completed
+              ? "linear-gradient(145deg,#22c55e,#16a34a)"
+              : "linear-gradient(145deg,#D0B055,#A88530)",
+            boxShadow: isCurrentlyPlaying
+              ? "0 0 0 4px rgba(196,162,69,0.22)"
+              : "0 4px 14px rgba(168,133,48,0.35)",
+          }}
+        >
+          {rs.completed ? (
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : isCurrentlyPlaying ? (
+            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <rect x="5.5" y="4" width="4" height="16" rx="1.5" />
+              <rect x="14.5" y="4" width="4" height="16" rx="1.5" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4 text-white translate-x-px" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          )}
+        </button>
+
+        {/* Text */}
+        <div className="flex-1 min-w-0">
+          <p className="text-navy font-semibold text-sm leading-tight line-clamp-2">{rs.title}</p>
+          {rs.seriesName && (
+            <p className="text-navy/40 text-xs mt-0.5 truncate">{rs.seriesName}</p>
+          )}
+        </div>
+
+        {/* Progress badge + time */}
+        <div className="shrink-0 text-right">
+          <p className={`text-xs font-semibold ${rs.completed ? "text-green-500" : "text-primary"}`}>
+            {rs.completed ? "Done" : `${rs.progress}%`}
+          </p>
+          <p className="text-navy/30 text-[10px] mt-0.5">{formatRelativeTime(rs.lastListened)}</p>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      {!rs.completed && rs.progress > 0 && (
+        <div className="mt-3 h-1 bg-navy/8 rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full"
+            style={{ width: `${rs.progress}%`, background: "linear-gradient(90deg,#C4A245,#D0B055)" }}
+          />
+        </div>
+      )}
+
+      {/* Series link */}
+      {rs.seriesSlug && (
+        <div className="mt-2 flex justify-end">
+          <Link
+            href={`/shiurim/${rs.seriesSlug}`}
+            className="text-navy/30 text-[10px] hover:text-primary transition-colors"
+          >
+            Go to series →
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -311,18 +420,24 @@ export default function MyLearningClient({
   const { user, loading: authLoading } = useAuth();
   const { playShiur, playerState } = useAudioPlayer();
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [stats, setStats] = useState<LearningStats>({ totalShiurim: 0, completedShiurim: 0, inProgressShiurim: 0, seriesStarted: 0, totalMinutes: 0, streak: 0 });
+  const [stats, setStats] = useState<LearningStats>({
+    totalShiurim: 0, completedShiurim: 0, inProgressShiurim: 0,
+    seriesStarted: 0, totalMinutes: 0, streak: 0,
+  });
   const [cards, setCards] = useState<GroupedSeriesCard[]>([]);
   const [recentShiurim, setRecentShiurim] = useState<RecentShiur[]>([]);
+  const [allShiurimList, setAllShiurimList] = useState<RecentShiur[]>([]);
   const [ready, setReady] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("all");
+  const tabSectionRef = useRef<HTMLDivElement>(null);
 
   const refresh = useCallback(() => {
     const data = computeData(allSeries, groups, shiurLookup);
     setStats(data.stats);
     setCards(data.cards);
     setRecentShiurim(data.recentShiurim);
+    setAllShiurimList(data.allShiurimList);
   }, [allSeries, groups, shiurLookup]);
 
   useEffect(() => {
@@ -335,21 +450,49 @@ export default function MyLearningClient({
     let cancelled = false;
     setSyncing(true);
     loadProgressFromFirestore()
-      .then(() => {
-        if (!cancelled) refresh();
-      })
-      .catch(() => { })
-      .finally(() => {
-        if (!cancelled) setSyncing(false);
-      });
+      .then(() => { if (!cancelled) refresh(); })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setSyncing(false); });
     return () => { cancelled = true; };
   }, [authLoading, user, refresh]);
 
+  // Click stat box → set tab + scroll to tab section
+  const handleStatClick = (tab: TabId) => {
+    setActiveTab(tab);
+    setTimeout(() => {
+      tabSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  };
+
+  const filteredShiurim = useMemo(() => {
+    if (activeTab === "in-progress") return allShiurimList.filter((s) => !s.completed);
+    if (activeTab === "completed") return allShiurimList.filter((s) => s.completed);
+    return allShiurimList; // "all"
+  }, [allShiurimList, activeTab]);
+
   const filteredCards = useMemo(() => {
-    if (activeTab === "all") return cards;
-    if (activeTab === "in-progress") return cards.filter((c) => c.completedCount < c.episodeCount);
-    return cards.filter((c) => c.completedCount >= c.episodeCount && c.episodeCount > 0);
-  }, [cards, activeTab]);
+    return cards; // series tab always shows all series
+  }, [cards]);
+
+  function handlePlay(rs: RecentShiur) {
+    if (!rs.audioUrl) return;
+    playShiur(
+      {
+        id: rs.shiurId,
+        title: rs.title,
+        audioUrl: rs.audioUrl,
+        duration: rs.duration ? new Date(rs.duration * 1000).toISOString().substr(11, 8) : "0:00",
+        durationSeconds: rs.duration,
+        pubDate: rs.lastListened,
+        description: "",
+        link: "",
+        categoryId: "",
+      },
+      false,
+      rs.seriesSlug || undefined,
+      null
+    );
+  }
 
   if (!ready) {
     return (
@@ -362,7 +505,7 @@ export default function MyLearningClient({
     );
   }
 
-  const hasProgress = cards.length > 0;
+  const hasProgress = allShiurimList.length > 0;
 
   return (
     <main className="min-h-screen bg-bg-light">
@@ -380,7 +523,7 @@ export default function MyLearningClient({
 
       <section className="py-12 px-6">
         <div className="max-w-6xl mx-auto">
-          {/* Sign-in prompt (non-blocking) */}
+          {/* Sign-in prompt */}
           {!user && !authLoading && (
             <div className="mb-8 bg-white border border-primary/20 rounded-xl p-5 flex flex-col sm:flex-row items-center gap-4 shadow-sm">
               <div className="flex-1 min-w-0">
@@ -396,7 +539,6 @@ export default function MyLearningClient({
             </div>
           )}
 
-          {/* Syncing indicator */}
           {syncing && (
             <div className="mb-4 flex items-center gap-2 text-navy/50 text-sm">
               <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
@@ -408,196 +550,170 @@ export default function MyLearningClient({
             <div className="text-center py-20">
               <h2 className="text-2xl font-bold text-navy mb-2">Start Your Learning Journey</h2>
               <p className="text-navy/60 mb-6">You haven&apos;t started any shiurim yet. Browse our library to begin!</p>
-              <Link href="/shiurim" className="inline-block bg-primary text-white px-8 py-3 rounded-xl font-semibold hover:bg-primary-light transition-colors">Browse Shiurim</Link>
+              <Link href="/shiurim" className="inline-block bg-primary text-white px-8 py-3 rounded-xl font-semibold hover:bg-primary-light transition-colors">
+                Browse Shiurim
+              </Link>
             </div>
           ) : (
             <>
-              {/* Stats Overview */}
+              {/* ── Stats (clickable) ── */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
                 {[
-                  { label: "Shiurim Started", value: stats.totalShiurim },
-                  { label: "Completed", value: stats.completedShiurim },
-                  { label: "In Progress", value: stats.inProgressShiurim },
-                  { label: "Series", value: stats.seriesStarted },
-                  { label: "Time Listened", value: formatMinutes(stats.totalMinutes) },
+                  { label: "Shiurim Started", value: stats.totalShiurim, tab: "all" as TabId },
+                  { label: "Completed", value: stats.completedShiurim, tab: "completed" as TabId },
+                  { label: "In Progress", value: stats.inProgressShiurim, tab: "in-progress" as TabId },
+                  { label: "Series", value: stats.seriesStarted, tab: "series" as TabId },
+                  { label: "Time Listened", value: formatMinutes(stats.totalMinutes), tab: "all" as TabId },
                 ].map((item) => (
-                  <div key={item.label} className="bg-white border border-primary/15 rounded-xl p-4 text-center shadow-sm">
+                  <button
+                    key={item.label}
+                    onClick={() => handleStatClick(item.tab)}
+                    className={`bg-white border rounded-xl p-4 text-center shadow-sm transition-all hover:shadow-md hover:border-primary/30 cursor-pointer ${
+                      activeTab === item.tab ? "border-primary/40 ring-1 ring-primary/20" : "border-primary/15"
+                    }`}
+                  >
                     <p className="text-navy text-2xl font-bold">{item.value}</p>
                     <p className="text-navy/50 text-xs mt-1">{item.label}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Recently Played */}
-              {recentShiurim.length > 0 && (
-                <div className="mb-10">
-                  <h2 className="text-navy font-bold text-xl mb-4">Recently Played</h2>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {recentShiurim.map((rs) => {
-                      const isCurrentlyPlaying = playerState.currentShiur?.id === rs.shiurId && playerState.isPlaying;
-                      const isCurrent = playerState.currentShiur?.id === rs.shiurId;
-                      return (
-                        <div
-                          key={rs.shiurId}
-                          className={`bg-white border rounded-xl p-4 shadow-sm transition-all ${isCurrent ? "border-primary/40 ring-1 ring-primary/20" : "border-primary/15 hover:border-primary/30 hover:shadow-md"}`}
-                        >
-                          <div className="flex items-center gap-3">
-                            {/* Play/Pause button */}
-                            <button
-                              onClick={() => {
-                                if (!rs.audioUrl) return;
-                                playShiur(
-                                  {
-                                    id: rs.shiurId,
-                                    title: rs.title,
-                                    audioUrl: rs.audioUrl,
-                                    duration: rs.duration ? new Date(rs.duration * 1000).toISOString().substr(11, 8) : "0:00",
-                                    durationSeconds: rs.duration,
-                                    pubDate: rs.lastListened,
-                                    description: "",
-                                    link: "",
-                                    categoryId: "",
-                                  },
-                                  false,
-                                  rs.seriesSlug || undefined,
-                                  null
-                                );
-                              }}
-                              aria-label={isCurrentlyPlaying ? "Pause" : "Resume"}
-                              className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
-                              style={{
-                                background: rs.completed
-                                  ? "linear-gradient(145deg,#22c55e,#16a34a)"
-                                  : "linear-gradient(145deg,#D0B055,#A88530)",
-                                boxShadow: isCurrentlyPlaying
-                                  ? "0 0 0 4px rgba(196,162,69,0.22)"
-                                  : "0 4px 14px rgba(168,133,48,0.35)",
-                              }}
-                            >
-                              {rs.completed ? (
-                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                              ) : isCurrentlyPlaying ? (
-                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><rect x="5.5" y="4" width="4" height="16" rx="1.5" /><rect x="14.5" y="4" width="4" height="16" rx="1.5" /></svg>
-                              ) : (
-                                <svg className="w-4 h-4 text-white translate-x-px" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                              )}
-                            </button>
-
-                            {/* Text */}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-navy font-semibold text-sm leading-tight line-clamp-2">{rs.title}</p>
-                              {rs.seriesName && (
-                                <p className="text-navy/40 text-xs mt-0.5 truncate">{rs.seriesName}</p>
-                              )}
-                            </div>
-
-                            {/* Progress badge */}
-                            <div className="shrink-0 text-right">
-                              <p className={`text-xs font-semibold ${rs.completed ? "text-green-500" : "text-primary"}`}>
-                                {rs.completed ? "Done" : `${rs.progress}%`}
-                              </p>
-                              <p className="text-navy/30 text-[10px] mt-0.5">{formatRelativeTime(rs.lastListened)}</p>
-                            </div>
-                          </div>
-
-                          {/* Progress bar */}
-                          {!rs.completed && rs.progress > 0 && (
-                            <div className="mt-3 h-1 bg-navy/8 rounded-full overflow-hidden">
-                              <div className="h-full rounded-full" style={{ width: `${rs.progress}%`, background: "linear-gradient(90deg,#C4A245,#D0B055)" }} />
-                            </div>
-                          )}
-
-                          {/* Series link */}
-                          {rs.seriesSlug && (
-                            <div className="mt-2 flex justify-end">
-                              <Link href={`/shiurim/${rs.seriesSlug}`} className="text-navy/30 text-[10px] hover:text-primary transition-colors">
-                                Go to series →
-                              </Link>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Tabs */}
-              <div className="flex gap-1 mb-6 border-b border-navy/10">
-                {TABS.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`px-5 py-2.5 text-sm font-semibold transition-colors relative ${activeTab === tab.id
-                      ? "text-primary"
-                      : "text-navy/40 hover:text-navy/70"
-                      }`}
-                  >
-                    {tab.label}
-                    {activeTab === tab.id && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
-                    )}
                   </button>
                 ))}
               </div>
 
-              {/* Series / Group Progress Cards */}
-              {filteredCards.length === 0 ? (
-                <div className="text-center py-16">
-                  <p className="text-navy/40 text-lg">
-                    {activeTab === "completed"
-                      ? "Keep going! You haven't finished a series yet."
-                      : activeTab === "in-progress"
-                        ? "No series in progress right now."
-                        : "No series to show."}
-                  </p>
+              {/* ── Recently Played ── */}
+              {recentShiurim.length > 0 && (
+                <div className="mb-10">
+                  <h2 className="text-navy font-bold text-xl mb-4">Recently Played</h2>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {recentShiurim.map((rs) => (
+                      <ShiurListCard
+                        key={rs.shiurId}
+                        rs={rs}
+                        isCurrentlyPlaying={playerState.currentShiur?.id === rs.shiurId && playerState.isPlaying}
+                        isCurrent={playerState.currentShiur?.id === rs.shiurId}
+                        onPlay={() => handlePlay(rs)}
+                      />
+                    ))}
+                  </div>
                 </div>
-              ) : (
-                <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.08 } } }} className="space-y-4">
-                  {filteredCards.map((s) => {
-                    const pct = s.episodeCount > 0 ? Math.round((s.completedCount / s.episodeCount) * 100) : 0;
-                    return (
-                      <motion.div key={s.slug} variants={fadeUp}>
-                        <Link href={`/shiurim/${s.slug}`}
-                          className="block bg-white border border-primary/15 rounded-xl p-6 shadow-sm hover:shadow-md hover:border-primary/30 transition-all group">
-                          <div className="flex items-center justify-between gap-4 mb-4">
-                            <div className="flex-1 min-w-0">
-                              <h3 className="text-navy font-bold text-xl group-hover:text-primary transition-colors">{s.name}</h3>
-                              {s.lastShiurTitle && (
-                                <p className="text-primary/80 text-sm font-medium mt-0.5 truncate">
-                                  ↩ {s.lastShiurTitle}
-                                </p>
-                              )}
-                              <p className="text-navy/50 text-sm mt-1">
-                                <span className="font-semibold text-navy/70">{s.completedCount}</span> / {s.episodeCount} shiurim completed
-                                <span className="text-navy/30 mx-2">&middot;</span>
-                                Last listened {formatRelativeTime(s.lastListened)}
-                              </p>
-                            </div>
-                            <span className="inline-flex items-center gap-2 bg-primary text-white text-sm font-semibold rounded-xl px-5 py-2.5 shrink-0 shadow-sm group-hover:bg-primary-light transition-colors">
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                              Continue
-                            </span>
-                          </div>
-                          <div className="h-2.5 bg-navy/8 rounded-full overflow-hidden">
-                            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
-                          </div>
-                          <div className="flex items-center justify-between mt-2">
-                            <p className="text-navy/40 text-xs">{pct}% complete</p>
-                            {s.lastShiurProgress > 0 && s.lastShiurProgress < 100 && (
-                              <p className="text-primary text-xs font-medium">Current shiur: {s.lastShiurProgress}% listened</p>
-                            )}
-                          </div>
-                        </Link>
-                      </motion.div>
-                    );
-                  })}
-                </motion.div>
               )}
+
+              {/* ── Tabs + filtered content ── */}
+              <div ref={tabSectionRef} className="scroll-mt-6">
+                <div className="flex gap-1 mb-6 border-b border-navy/10 overflow-x-auto">
+                  {TABS.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`px-5 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors relative ${
+                        activeTab === tab.id ? "text-primary" : "text-navy/40 hover:text-navy/70"
+                      }`}
+                    >
+                      {tab.label}
+                      {activeTab === tab.id && (
+                        <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Individual shiurim list (All / In Progress / Completed) */}
+                {activeTab !== "series" && (
+                  filteredShiurim.length === 0 ? (
+                    <div className="text-center py-16">
+                      <p className="text-navy/40 text-lg">
+                        {activeTab === "completed"
+                          ? "Keep going! You haven't finished a shiur yet."
+                          : activeTab === "in-progress"
+                          ? "No shiurim in progress right now."
+                          : "No shiurim to show."}
+                      </p>
+                    </div>
+                  ) : (
+                    <motion.div
+                      key={activeTab}
+                      initial="hidden"
+                      animate="visible"
+                      variants={{ visible: { transition: { staggerChildren: 0.05 } } }}
+                      className="grid gap-3 sm:grid-cols-2"
+                    >
+                      {filteredShiurim.map((rs) => (
+                        <motion.div key={rs.shiurId} variants={fadeUp}>
+                          <ShiurListCard
+                            rs={rs}
+                            isCurrentlyPlaying={playerState.currentShiur?.id === rs.shiurId && playerState.isPlaying}
+                            isCurrent={playerState.currentShiur?.id === rs.shiurId}
+                            onPlay={() => handlePlay(rs)}
+                          />
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  )
+                )}
+
+                {/* Series tab */}
+                {activeTab === "series" && (
+                  filteredCards.length === 0 ? (
+                    <div className="text-center py-16">
+                      <p className="text-navy/40 text-lg">No series started yet.</p>
+                    </div>
+                  ) : (
+                    <motion.div
+                      key="series"
+                      initial="hidden"
+                      animate="visible"
+                      variants={{ visible: { transition: { staggerChildren: 0.07 } } }}
+                      className="space-y-4"
+                    >
+                      {filteredCards.map((s) => {
+                        const pct = s.episodeCount > 0 ? Math.round((s.completedCount / s.episodeCount) * 100) : 0;
+                        return (
+                          <motion.div key={s.slug} variants={fadeUp}>
+                            <Link
+                              href={`/shiurim/${s.slug}`}
+                              className="block bg-white border border-primary/15 rounded-xl p-6 shadow-sm hover:shadow-md hover:border-primary/30 transition-all group"
+                            >
+                              <div className="flex items-center justify-between gap-4 mb-4">
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-navy font-bold text-xl group-hover:text-primary transition-colors">{s.name}</h3>
+                                  {s.lastShiurTitle && (
+                                    <p className="text-primary/80 text-sm font-medium mt-0.5 truncate">
+                                      ↩ {s.lastShiurTitle}
+                                    </p>
+                                  )}
+                                  <p className="text-navy/50 text-sm mt-1">
+                                    <span className="font-semibold text-navy/70">{s.completedCount}</span> / {s.episodeCount} shiurim completed
+                                    <span className="text-navy/30 mx-2">&middot;</span>
+                                    Last listened {formatRelativeTime(s.lastListened)}
+                                  </p>
+                                </div>
+                                <span className="inline-flex items-center gap-2 bg-primary text-white text-sm font-semibold rounded-xl px-5 py-2.5 shrink-0 shadow-sm group-hover:bg-primary-light transition-colors">
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                                  Continue
+                                </span>
+                              </div>
+                              <div className="h-2.5 bg-navy/8 rounded-full overflow-hidden">
+                                <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
+                              </div>
+                              <div className="flex items-center justify-between mt-2">
+                                <p className="text-navy/40 text-xs">{pct}% complete</p>
+                                {s.lastShiurProgress > 0 && s.lastShiurProgress < 100 && (
+                                  <p className="text-primary text-xs font-medium">Current shiur: {s.lastShiurProgress}% listened</p>
+                                )}
+                              </div>
+                            </Link>
+                          </motion.div>
+                        );
+                      })}
+                    </motion.div>
+                  )
+                )}
+              </div>
 
               {/* Browse More */}
               <div className="mt-10 text-center">
-                <Link href="/shiurim" className="inline-flex items-center gap-2 border-2 border-primary/30 text-navy px-8 py-3 rounded-xl font-semibold hover:bg-primary/5 transition-colors">
+                <Link
+                  href="/shiurim"
+                  className="inline-flex items-center gap-2 border-2 border-primary/30 text-navy px-8 py-3 rounded-xl font-semibold hover:bg-primary/5 transition-colors"
+                >
                   <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
