@@ -17,7 +17,7 @@ export default function ShiurimHero({ totalCount }: { totalCount: number }) {
   const { user } = useAuth();
 
   return (
-    <section className="bg-navy py-24 px-6 text-center">
+    <section className="bg-navy py-12 md:py-24 px-6 text-center">
       <motion.div
         initial="hidden"
         animate="visible"

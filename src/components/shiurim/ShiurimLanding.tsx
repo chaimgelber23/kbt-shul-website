@@ -70,17 +70,23 @@ export default function ShiurimLanding({
       .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
   }, [allShiurim, currentParsha]);
 
-  const displayedParshaShiurim = parshaShiurim.slice(0, 3);
+  // Fallback: if no shiurim match the specific parsha, show the latest parsha shiurim overall
+  const latestParshaShiurim = useMemo(() => {
+    if (parshaShiurim.length > 0) return [];
+    return allShiurim
+      .filter((s) => /^Parshas?\s/i.test(s.title))
+      .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
+      .slice(0, 3);
+  }, [allShiurim, parshaShiurim]);
+
+  const displayedParshaShiurim = parshaShiurim.length > 0 ? parshaShiurim.slice(0, 3) : latestParshaShiurim;
 
   return (
     <main className="min-h-screen">
       <ShiurimHero totalCount={totalCount} />
 
-      {/* Sign in banner for unauthenticated users */}
-      <SignInBanner />
-
-      {/* This Week's Parsha */}
-      {currentParsha && parshaShiurim.length > 0 && !isSearching && (
+      {/* This Week's Parsha — always show as the first content */}
+      {displayedParshaShiurim.length > 0 && !isSearching && (
         <motion.section
           initial="hidden"
           whileInView="visible"
@@ -97,16 +103,18 @@ export default function ShiurimLanding({
               </div>
               <div>
                 <h2 className="serif-heading text-navy text-3xl font-bold">
-                  This Week&apos;s Parsha
+                  {currentParsha ? "This Week\u2019s Parsha" : "Parshas HaShavua"}
                 </h2>
-                <p className="text-primary font-semibold text-lg">
-                  {currentParsha.name}
-                  {currentParsha.hebrew && (
-                    <span className="hebrew-heading text-navy/50 ml-2">
-                      {currentParsha.hebrew}
-                    </span>
-                  )}
-                </p>
+                {currentParsha && (
+                  <p className="text-primary font-semibold text-lg">
+                    {currentParsha.name}
+                    {currentParsha.hebrew && (
+                      <span className="hebrew-heading text-navy/50 ml-2">
+                        {currentParsha.hebrew}
+                      </span>
+                    )}
+                  </p>
+                )}
               </div>
             </motion.div>
             <motion.div variants={fadeUp} className="w-20 h-1 bg-primary mb-8" />
@@ -122,19 +130,31 @@ export default function ShiurimLanding({
                 </motion.div>
               ))}
             </motion.div>
-            {parshaShiurim.length > 3 && (
+            {parshaShiurim.length > 3 && currentParsha ? (
               <motion.div variants={fadeUp} className="mt-6 text-center">
                 <Link
-                  href={`/shiurim/parsha?section=${encodeURIComponent(currentParsha!.name)}`}
+                  href={`/shiurim/parsha?section=${encodeURIComponent(currentParsha.name)}`}
                   className="text-primary font-semibold hover:text-primary-light transition-colors text-sm"
                 >
-                  View all {parshaShiurim.length} shiurim on Parshas {currentParsha!.name} &rarr;
+                  View all {parshaShiurim.length} shiurim on Parshas {currentParsha.name} &rarr;
+                </Link>
+              </motion.div>
+            ) : !currentParsha && (
+              <motion.div variants={fadeUp} className="mt-6 text-center">
+                <Link
+                  href="/shiurim/parsha"
+                  className="text-primary font-semibold hover:text-primary-light transition-colors text-sm"
+                >
+                  Browse all Parsha shiurim &rarr;
                 </Link>
               </motion.div>
             )}
           </div>
         </motion.section>
       )}
+
+      {/* Sign in banner for unauthenticated users */}
+      <SignInBanner />
 
       {/* Search Bar */}
       <section className="bg-bg-alt border-b border-primary/10 py-6 px-6 sticky top-[73px] z-40 backdrop-blur-sm bg-bg-alt/95">
