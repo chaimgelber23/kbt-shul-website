@@ -133,7 +133,7 @@ function runDeepFilter(inputWav, outputDir) {
     inputWav,
     "-o", enhancedDir,
     "--pf",  // enable post-filter for extra noise reduction
-  ], { stdio: "pipe", timeout: 600000 }); // 10 min timeout
+  ], { stdio: "pipe", timeout: 1800000 }); // 30 min timeout for longer shiurim
   return enhancedDir;
 }
 
