@@ -1,0 +1,14 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Enhanced shiurim audio - public read, admin-only write
+    match /enhanced-shiurim/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+    // Default - deny all
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

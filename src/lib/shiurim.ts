@@ -3,6 +3,7 @@ import { join } from "path";
 import { fetchFromRss } from "./rss";
 import { fetchFromPodcastIndex } from "./podcastIndex";
 import { categorizeTitle } from "./categories";
+import { applyEnhancedUrls } from "./enhancedAudio";
 import type { Shiur } from "./types";
 
 interface ArchiveEpisode {
@@ -101,5 +102,8 @@ export async function fetchAllShiurim(): Promise<Shiur[]> {
   const merged = Array.from(byTitle.values());
   merged.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
 
-  return merged;
+  // Swap in enhanced audio URLs where available
+  const enhanced = await applyEnhancedUrls(merged);
+
+  return enhanced;
 }

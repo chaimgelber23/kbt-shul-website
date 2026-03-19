@@ -1,0 +1,67 @@
+name: Enhance Shiurim Audio
+
+on:
+  schedule:
+    # Run daily at 3 AM UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Max shiurim to process (0 = all remaining)'
+        required: false
+        default: '100'
+
+jobs:
+  enhance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330 # 5.5 hours max
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Download DeepFilterNet binary
+        run: |
+          mkdir -p scripts/bin
+          curl -L -o scripts/bin/deep-filter \
+            "https://github.com/Rikorose/DeepFilterNet/releases/download/v0.5.6/deep-filter-0.5.6-x86_64-unknown-linux-musl"
+          chmod +x scripts/bin/deep-filter
+
+      - name: Write service account key
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > service-account-key.json
+
+      - name: Update binary path for Linux
+        run: |
+          # The script references deep-filter.exe - create a symlink
+          ln -s deep-filter scripts/bin/deep-filter.exe
+
+      - name: Run enhancement pipeline
+        run: |
+          LIMIT="${{ github.event.inputs.limit || '100' }}"
+          if [ "$LIMIT" = "0" ]; then
+            node scripts/enhance-shiurim.mjs
+          else
+            node scripts/enhance-shiurim.mjs --recent "$LIMIT"
+          fi
+        env:
+          NODE_OPTIONS: '--max-old-space-size=4096'
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Enhancement Results" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          tail -10 scripts/enhance.log 2>/dev/null || echo "Check workflow logs above for results"
+          echo '```' >> $GITHUB_STEP_SUMMARY

@@ -8,10 +8,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Missing url parameter" }, { status: 400 });
   }
 
-  // Only allow downloading from jewishpodcasts.fm
+  // Only allow downloading from approved audio sources
   try {
     const parsed = new URL(url);
-    if (!parsed.hostname.endsWith("jewishpodcasts.fm")) {
+    const allowed =
+      parsed.hostname.endsWith("jewishpodcasts.fm") ||
+      parsed.hostname === "storage.googleapis.com";
+    if (!allowed) {
       return NextResponse.json({ error: "Invalid audio source" }, { status: 403 });
     }
   } catch {

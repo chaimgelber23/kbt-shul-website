@@ -36,6 +36,13 @@ yarn-error.log*
 # vercel
 .vercel
 
+# firebase service account key (NEVER commit)
+service-account-key.json
+
+# audio enhancement temp files
+/scripts/temp/
+/scripts/bin/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
