@@ -157,7 +157,7 @@ export default function ShiurCard({
               className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-150
                 ${copied
                   ? "text-green-600 bg-green-50"
-                  : "text-navy/25 hover:text-primary hover:bg-primary/8"
+                  : "text-navy/50 hover:text-primary hover:bg-primary/8"
                 }`}
             >
               {copied ? (
@@ -175,7 +175,7 @@ export default function ShiurCard({
           <a
             href={`/api/download?url=${encodeURIComponent(shiur.audioUrl)}&title=${encodeURIComponent(shiur.title)}`}
             title="Download shiur"
-            className="w-8 h-8 rounded-full flex items-center justify-center text-navy/25
+            className="w-8 h-8 rounded-full flex items-center justify-center text-navy/50
                        hover:text-primary hover:bg-primary/8 transition-all duration-150"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
