@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import type { Shiur } from "@/lib/types";
 import { getCategoryDef } from "@/lib/categories";
 import { getProgressPercentage, isInProgress } from "@/lib/progress";
+import { matchTitleToSeries } from "@/lib/seriesConfig";
 
 function formatDate(isoDate: string): string {
   return new Date(isoDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -37,14 +38,21 @@ export default function ShiurCard({
   const [inProgress, setInProgress] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // Auto-detect series slug from title if not provided
+  const resolvedSlug = useMemo(() => {
+    if (seriesSlug) return seriesSlug;
+    const match = matchTitleToSeries(shiur.title);
+    return match?.slug ?? null;
+  }, [seriesSlug, shiur.title]);
+
   const handleShare = useCallback(() => {
-    if (!seriesSlug) return;
-    const url = `${window.location.origin}/shiurim/${seriesSlug}?shiur=${encodeURIComponent(shiur.id)}`;
+    if (!resolvedSlug) return;
+    const url = `${window.location.origin}/shiurim/${resolvedSlug}?shiur=${encodeURIComponent(shiur.id)}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
-  }, [seriesSlug, shiur.id]);
+  }, [resolvedSlug, shiur.id]);
 
   useEffect(() => {
     setProgressPercent(getProgressPercentage(shiur.id));
@@ -142,7 +150,7 @@ export default function ShiurCard({
 
         {/* ── Share + Download icons ── */}
         <div className="flex-shrink-0 flex items-center gap-0.5">
-          {seriesSlug && (
+          {resolvedSlug && (
             <button
               onClick={handleShare}
               title={copied ? "Link copied!" : "Copy link to shiur"}
