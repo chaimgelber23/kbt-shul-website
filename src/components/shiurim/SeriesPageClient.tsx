@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import type { Shiur, SortOrder, NavType, SeriesGroup } from "@/lib/types";
@@ -66,6 +66,8 @@ export default function SeriesPageClient({
       }
     }
   }, [series.navType, searchParams, navSections]);
+
+  const deepLinkedRef = useRef(false);
 
   // Get recommended shiur based on progress
   const recommendedShiur = useMemo(() => {
@@ -134,6 +136,29 @@ export default function SeriesPageClient({
 
     return filtered;
   }, [shiurim, selectedSection, selectedSubSection, sortOrder, series.navType]);
+
+  // Deep-link: auto-play and scroll to a specific shiur via ?shiur=ID
+  useEffect(() => {
+    if (deepLinkedRef.current) return;
+    const shiurId = searchParams.get("shiur");
+    if (!shiurId) return;
+    const target = shiurim.find((s) => s.id === shiurId);
+    if (!target) return;
+    deepLinkedRef.current = true;
+    // Ensure the shiur is in the visible set
+    const idx = filteredShiurim.findIndex((s) => s.id === shiurId);
+    if (idx >= 0 && idx >= visibleCount) {
+      setVisibleCount(idx + PAGE_SIZE);
+    }
+    // Auto-play the linked shiur
+    const next = getNextShiur(shiurim, target.id);
+    playShiur(target, false, series.slug, next);
+    // Scroll to the card after render
+    setTimeout(() => {
+      const el = document.getElementById(`shiur-${shiurId}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 300);
+  }, [searchParams, shiurim, filteredShiurim, visibleCount, playShiur, series.slug]);
 
   const visible = filteredShiurim.slice(0, visibleCount);
   const hasMore = visibleCount < filteredShiurim.length;
@@ -366,7 +391,7 @@ export default function SeriesPageClient({
             {visible.map((shiur) => {
               const nextShiur = getNextShiur(filteredShiurim, shiur.id);
               return (
-                <motion.div key={shiur.id} variants={fadeUp}>
+                <motion.div key={shiur.id} id={`shiur-${shiur.id}`} variants={fadeUp}>
                   <ShiurCard
                     shiur={shiur}
                     onPlay={(s) => playShiur(s, false, series.slug, nextShiur)}
@@ -375,6 +400,7 @@ export default function SeriesPageClient({
                       playerState.isPlaying
                     }
                     isCurrent={playerState.currentShiur?.id === shiur.id}
+                    seriesSlug={series.slug}
                   />
                 </motion.div>
               );

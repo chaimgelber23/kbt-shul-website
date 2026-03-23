@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import type { Shiur } from "@/lib/types";
 import { getCategoryDef } from "@/lib/categories";
 import { getProgressPercentage, isInProgress } from "@/lib/progress";
@@ -24,15 +24,27 @@ export default function ShiurCard({
   onPlay,
   isCurrentlyPlaying,
   isCurrent,
+  seriesSlug,
 }: {
   shiur: Shiur;
   onPlay: (shiur: Shiur) => void;
   isCurrentlyPlaying: boolean;
   isCurrent: boolean;
+  seriesSlug?: string;
 }) {
   const catDef = getCategoryDef(shiur.categoryId);
   const [progressPercent, setProgressPercent] = useState(0);
   const [inProgress, setInProgress] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = useCallback(() => {
+    if (!seriesSlug) return;
+    const url = `${window.location.origin}/shiurim/${seriesSlug}?shiur=${encodeURIComponent(shiur.id)}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [seriesSlug, shiur.id]);
 
   useEffect(() => {
     setProgressPercent(getProgressPercentage(shiur.id));
@@ -128,18 +140,42 @@ export default function ShiurCard({
           )}
         </div>
 
-        {/* ── Download icon ── */}
-        <a
-          href={`/api/download?url=${encodeURIComponent(shiur.audioUrl)}&title=${encodeURIComponent(shiur.title)}`}
-          title="Download shiur"
-          className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-navy/25
-                     hover:text-primary hover:bg-primary/8 transition-all duration-150"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-        </a>
+        {/* ── Share + Download icons ── */}
+        <div className="flex-shrink-0 flex items-center gap-0.5">
+          {seriesSlug && (
+            <button
+              onClick={handleShare}
+              title={copied ? "Link copied!" : "Copy link to shiur"}
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-150
+                ${copied
+                  ? "text-green-600 bg-green-50"
+                  : "text-navy/25 hover:text-primary hover:bg-primary/8"
+                }`}
+            >
+              {copied ? (
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              )}
+            </button>
+          )}
+          <a
+            href={`/api/download?url=${encodeURIComponent(shiur.audioUrl)}&title=${encodeURIComponent(shiur.title)}`}
+            title="Download shiur"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-navy/25
+                       hover:text-primary hover:bg-primary/8 transition-all duration-150"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+          </a>
+        </div>
 
       </div>
     </div>
