@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import type { Shiur, SortOrder, NavType, SeriesGroup } from "@/lib/types";
-import { PARSHIYOS_BY_SEFER, canonicalParsha, getParshaVariants } from "@/lib/categoryConfig";
+import { PARSHIYOS_BY_SEFER, canonicalParsha, getParshaVariants, splitParshaNames } from "@/lib/categoryConfig";
 import { useAudioPlayer } from "./AudioPlayerProvider";
 import { getRecommendedShiur, getNextShiur } from "@/lib/progress";
 import SeriesHero from "./SeriesHero";
@@ -35,10 +35,12 @@ export default function SeriesPageClient({
   series,
   shiurim,
   navSections,
+  sectionMap = {},
 }: {
   series: SeriesInfo;
   shiurim: Shiur[];
   navSections: string[];
+  sectionMap?: Record<string, string>;
 }) {
   const [sortOrder, setSortOrder] = useState<SortOrder>(series.sortDefault);
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
@@ -47,21 +49,23 @@ export default function SeriesPageClient({
   const { playShiur, playerState } = useAudioPlayer();
   const searchParams = useSearchParams();
 
-  // Auto-select parsha from URL query param (e.g., ?section=Pekudei or ?section=Ki+Tisa)
+  // Auto-select parsha from URL query param (e.g., ?section=Pekudei, ?section=Ki+Tisa,
+  // or ?section=Acharei+Mos+-+Kedoshim for a double parsha).
   useEffect(() => {
     if (series.navType !== "parsha") return;
     const target = searchParams.get("section");
     if (!target) return;
-    // Normalize variant spellings (e.g., "Ki Tisa" → "Ki Sisa")
     const canonical = canonicalParsha(target);
-    const lower = canonical.toLowerCase();
-    // Find which sefer contains this parsha
+    const parts = splitParshaNames(canonical);
+    const firstLower = parts[0]?.toLowerCase();
+    if (!firstLower) return;
+    // Find which sefer contains the (first) constituent parsha
     for (const sefer of navSections) {
       const parshiyos = PARSHIYOS_BY_SEFER[sefer] || [];
-      const match = parshiyos.find((p) => p.toLowerCase() === lower);
-      if (match) {
+      if (parshiyos.some((p) => p.toLowerCase() === firstLower)) {
         setSelectedSection(sefer);
-        setSelectedSubSection(match);
+        // For a double, store the combined canonical so the filter matches either half
+        setSelectedSubSection(parts.length > 1 ? canonical : parts[0]);
         break;
       }
     }
@@ -85,9 +89,12 @@ export default function SeriesPageClient({
     let filtered = [...shiurim];
 
     if (selectedSection && series.navType === "parsha") {
-      // For parsha, filter by parsha name in title (variant-aware)
+      // For parsha, filter by parsha name in title (variant-aware).
+      // A double parsha subSection (e.g., "Acharei Mos - Kedoshim") matches shiurim on either half.
       if (selectedSubSection) {
-        const variants = getParshaVariants(selectedSubSection);
+        const variants = splitParshaNames(selectedSubSection).flatMap((n) =>
+          getParshaVariants(n)
+        );
         filtered = filtered.filter((s) => {
           const titleLower = s.title.toLowerCase();
           return variants.some((v) =>
@@ -122,10 +129,16 @@ export default function SeriesPageClient({
         return perekPattern.test(titleLower);
       });
     } else if (selectedSection && series.navType === "topic") {
+      // Prefer the server-computed section map (catches shiurim whose
+      // section name doesn't appear verbatim in the title, e.g., a
+      // "Shabbos Hagadol" shiur belonging to "Pesach"). Fall back to
+      // a substring match for any shiur missing from the map.
       const lower = selectedSection.toLowerCase();
-      filtered = filtered.filter((s) =>
-        s.title.toLowerCase().includes(lower)
-      );
+      filtered = filtered.filter((s) => {
+        const mapped = sectionMap[s.id];
+        if (mapped) return mapped === selectedSection;
+        return s.title.toLowerCase().includes(lower);
+      });
     }
 
     // Sort
@@ -135,7 +148,7 @@ export default function SeriesPageClient({
     });
 
     return filtered;
-  }, [shiurim, selectedSection, selectedSubSection, sortOrder, series.navType]);
+  }, [shiurim, selectedSection, selectedSubSection, sortOrder, series.navType, sectionMap]);
 
   // Deep-link: auto-play and scroll to a specific shiur via ?shiur=ID
   useEffect(() => {

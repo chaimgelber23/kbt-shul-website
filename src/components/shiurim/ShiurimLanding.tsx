@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import type { Shiur, SeriesStats } from "@/lib/types";
-import { getParshaVariants } from "@/lib/categoryConfig";
+import { getParshaVariants, splitParshaNames } from "@/lib/categoryConfig";
 import { useAudioPlayer } from "./AudioPlayerProvider";
 import ShiurimHero from "./ShiurimHero";
 import SearchBar from "./SearchBar";
@@ -50,17 +50,16 @@ export default function ShiurimLanding({
 
   const isSearching = searchQuery.trim().length > 0;
 
-  // Find ALL parsha shiurim for "This Week's Parsha" (don't slice — we need the total count)
+  // Find ALL parsha shiurim for "This Week's Parsha" (don't slice — we need the total count).
+  // Double parshiyos (e.g., "Acharei Mos - Kedoshim") match shiurim on either constituent parsha.
   const parshaShiurim = useMemo(() => {
     if (!currentParsha) return [];
-    const lowerName = currentParsha.name.toLowerCase();
-    // Get all known spelling variants (e.g., "ki sisa" → ["ki sisa", "ki tisa", "ki sissa"])
-    const variants = getParshaVariants(currentParsha.name);
+    const parshaNames = splitParshaNames(currentParsha.name);
+    const lowerNames = parshaNames.map((n) => n.toLowerCase());
+    const variants = parshaNames.flatMap((n) => getParshaVariants(n));
     return allShiurim
       .filter((s) => {
-        // Match by canonical subLevel2
-        if (s.subLevel2?.toLowerCase() === lowerName) return true;
-        // Also match by title containing any variant spelling
+        if (s.subLevel2 && lowerNames.includes(s.subLevel2.toLowerCase())) return true;
         const titleLower = s.title.toLowerCase();
         return variants.some((v) =>
           titleLower.includes(`parshas ${v}`) ||
@@ -224,11 +223,12 @@ export default function ShiurimLanding({
               {groups.map((group) => (
                 <motion.div
                   key={group.id}
+                  id={group.id}
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true }}
                   variants={stagger}
-                  className="mt-16"
+                  className="mt-16 scroll-mt-24"
                 >
                   <motion.div variants={fadeUp} className="flex items-center gap-4 mb-8">
                     <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center">

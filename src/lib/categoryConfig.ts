@@ -33,7 +33,7 @@ const PARSHA_TO_SEFER: Record<string, string> = {
   shemini: "Vayikra", shmini: "Vayikra",
   tazria: "Vayikra",
   metzora: "Vayikra",
-  "acharei mos": "Vayikra", "acharei mot": "Vayikra", "achrei mos": "Vayikra",
+  "acharei mos": "Vayikra", "acharei mot": "Vayikra", "achrei mos": "Vayikra", "achrei mot": "Vayikra",
   kedoshim: "Vayikra",
   emor: "Vayikra",
   behar: "Vayikra",
@@ -47,7 +47,7 @@ const PARSHA_TO_SEFER: Record<string, string> = {
   chukas: "Bamidbar", chukat: "Bamidbar",
   balak: "Bamidbar",
   pinchas: "Bamidbar", pinchos: "Bamidbar",
-  mattos: "Bamidbar", mattot: "Bamidbar", matos: "Bamidbar",
+  mattos: "Bamidbar", mattot: "Bamidbar", matos: "Bamidbar", matot: "Bamidbar",
   masei: "Bamidbar", massei: "Bamidbar",
   // Devarim
   devarim: "Devarim",
@@ -117,11 +117,30 @@ for (const parshiyos of Object.values(PARSHIYOS_BY_SEFER)) {
   }
 })();
 
-/** Find the canonical parsha name from a variant spelling */
+/** Find the canonical parsha name from a variant spelling.
+ * Handles double parshiyos (e.g., "Achrei Mot-Kedoshim" → "Acharei Mos - Kedoshim").
+ */
 export function canonicalParsha(parshaName: string): string {
-  const lower = parshaName.toLowerCase();
+  const trimmed = parshaName.trim();
+  if (/[-–]/.test(trimmed)) {
+    return trimmed
+      .split(/\s*[-–]\s*/)
+      .map((part) => canonicalParsha(part))
+      .join(" - ");
+  }
+  const lower = trimmed.toLowerCase();
   return VARIANT_TO_CANONICAL[lower] ||
-    parshaName.charAt(0).toUpperCase() + parshaName.slice(1);
+    trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+
+/** Split a parsha name into its canonical constituent parts.
+ * Single parsha → array of one. Double → array of two.
+ */
+export function splitParshaNames(parshaName: string): string[] {
+  return parshaName
+    .split(/\s*[-–]\s*/)
+    .map((part) => canonicalParsha(part.trim()))
+    .filter(Boolean);
 }
 
 /**
