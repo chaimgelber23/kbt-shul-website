@@ -30,7 +30,7 @@ const shiurimDropdown = [
   { label: "Machshava", href: "/shiurim/machshava", description: "Hashkafa & Jewish thought" },
   { label: "Pirkei Avos", href: "/shiurim/pirkei-avos", description: "With the Maharal" },
   { label: "Ruach Chaim", href: "/shiurim/ruach-chaim", description: "On Pirkei Avos" },
-  { label: "Navi", href: "/shiurim/yehoshua", description: "Yehoshua, Shoftim, Shmuel..." },
+  { label: "Navi", href: "/shiurim#navi", description: "Yehoshua, Shoftim, Shmuel..." },
   { label: "Tefilla", href: "/shiurim/tefilla", description: "Understanding prayer" },
 ];
 

@@ -17,32 +17,95 @@ function extractHalachaTopic(title: string): { section?: string; detail?: string
 }
 
 /** Map Yamim Tovim / topic categories from a title (used by Machshava + standalone Yom Tov) */
-function classifyYomTovTopic(lower: string): string | null {
-  if (/rosh\s+hashana/i.test(lower) || /shofar/i.test(lower) || /tekiy/i.test(lower) || /malchuyos/i.test(lower) || /zichronos/i.test(lower))
+export function classifyYomTovTopic(lower: string): string | null {
+  if (
+    /\brosh\s+hashana/i.test(lower) ||
+    /\bshofar/i.test(lower) ||
+    /\btekiy/i.test(lower) ||
+    /\bmalchuyos/i.test(lower) ||
+    /\bzichronos/i.test(lower) ||
+    /\byamim\s+nora/i.test(lower) ||
+    /\bmelech\s+hakadosh/i.test(lower) ||
+    /\bakeid[ao]/i.test(lower)
+  )
     return "Rosh Hashana";
-  if (/yom\s+kippur/i.test(lower) || /neila/i.test(lower) || /kohain\s+gadol/i.test(lower))
+  if (
+    /\byom\s+kippur/i.test(lower) ||
+    /\bneila/i.test(lower) ||
+    /\bkoh[ae]in\s+gadol/i.test(lower) ||
+    /\bv[iy]du[iy]\b/i.test(lower) ||
+    /\bazazel\b/i.test(lower) ||
+    /\bkol\s+nidrei/i.test(lower)
+  )
     return "Yom Kippur";
-  if (/sukk?os/i.test(lower) || /hoshana\s+rabba/i.test(lower) || /arava/i.test(lower) || /chol\s+hamoed/i.test(lower))
+  if (
+    /\bsukk?os\b/i.test(lower) ||
+    /\bhoshana\s+rabba/i.test(lower) ||
+    /\barava\b/i.test(lower) ||
+    /\bchol\s+hamoed/i.test(lower) ||
+    /\blulav/i.test(lower) ||
+    /\b[ee][st]rog/i.test(lower) ||
+    /\barba\s+minim/i.test(lower) ||
+    /\bushpizin/i.test(lower) ||
+    /\bzman\s+simchaseinu/i.test(lower)
+  )
     return "Sukkos";
-  if (/simchas\s+torah/i.test(lower) || /hakafos/i.test(lower) || /hatkafos/i.test(lower))
+  if (/\bsimchas\s+torah/i.test(lower) || /\bhakafos/i.test(lower) || /\bhatkafos/i.test(lower))
     return "Simchas Torah";
-  if (/koheles/i.test(lower)) return "Sukkos";
-  if (/chanuk/i.test(lower) || /channuk/i.test(lower)) return "Chanuka";
-  if (/purim/i.test(lower)) return "Purim";
-  if (/pesach/i.test(lower) || /seder\b/i.test(lower) || /hagad/i.test(lower) || /egypt/i.test(lower) || /pharoh/i.test(lower) || /shvi'i shel pesach/i.test(lower) || /shevi'i shel pesach/i.test(lower) || /matza/i.test(lower))
+  if (/\bkoheles/i.test(lower)) return "Sukkos";
+  if (/\bchanuk/i.test(lower) || /\bchannuk/i.test(lower)) return "Chanuka";
+  if (/\bpurim/i.test(lower) || /\bmegillas?\s+esther/i.test(lower) || /\bachashverosh/i.test(lower))
+    return "Purim";
+  if (
+    /\bpesach\b/i.test(lower) ||
+    /\bchametz\b/i.test(lower) ||
+    /\bhagad/i.test(lower) ||
+    /\bseder\s+(?:night|meal)/i.test(lower) ||
+    /leil\s+haseder/i.test(lower) ||
+    /(?:leading|making)\s+the\s+seder/i.test(lower) ||
+    /\bmatz[ao]h?s?\b/i.test(lower) ||
+    /\bafikoma?[ne]\b/i.test(lower) ||
+    /\bmaror\b/i.test(lower) ||
+    /\bkarpas\b/i.test(lower) ||
+    /korban\s+pesach/i.test(lower) ||
+    /yetzias\s+miz?rayim/i.test(lower) ||
+    /\bpharoh\b|\bpharaoh\b/i.test(lower) ||
+    /shabbos\s+hagadol/i.test(lower) ||
+    /shv?e?i['']?i\s+shel\s+pesach/i.test(lower)
+  )
     return "Pesach";
-  if (/shavuos/i.test(lower) || /sinai/i.test(lower) || /naaseh/i.test(lower)) return "Shavuos";
-  if (/tisha\s+b'?av/i.test(lower)) return "Tisha B'Av";
-  if (/seventeenth\s+of\s+tammuz/i.test(lower)) return "Tisha B'Av";
-  if (/teves/i.test(lower) || /10th of teves/i.test(lower) || /asara b'teves/i.test(lower) || /tenth of teves/i.test(lower))
+  if (
+    /\bshavuos/i.test(lower) ||
+    /\bsinai/i.test(lower) ||
+    /\bnaaseh/i.test(lower) ||
+    /\bmatan\s+torah/i.test(lower) ||
+    /\bkabalas\s+ha?torah/i.test(lower) ||
+    /\baseres\s+hadibros/i.test(lower) ||
+    /\bmegillas?\s+(?:rus|ruth)/i.test(lower)
+  )
+    return "Shavuos";
+  if (
+    /\btisha\s+b['']?av/i.test(lower) ||
+    /\bseventeenth\s+of\s+tammuz/i.test(lower) ||
+    /\bchurban\b/i.test(lower) ||
+    /\bnine\s+days\b/i.test(lower) ||
+    /\bthree\s+weeks\b/i.test(lower) ||
+    /\bbein\s+ha[\-\s]?metzarim/i.test(lower)
+  )
+    return "Tisha B'Av";
+  if (/\bteves\b/i.test(lower) || /10th of teves/i.test(lower) || /asara b'teves/i.test(lower) || /tenth of teves/i.test(lower))
     return "Asara B'Teves";
-  if (/selichos/i.test(lower) || /kinnos/i.test(lower)) return "Selichos";
-  if (/teshuva/i.test(lower) || /shovavim/i.test(lower)) return "Teshuva";
-  if (/lag\s+b[ao]?m?omer/i.test(lower) || /omer/i.test(lower)) return "Sefirah & Lag BaOmer";
-  if (/rosh\s+chodesh/i.test(lower)) return "Rosh Chodesh";
-  if (/ellul/i.test(lower) || /elul/i.test(lower)) return "Elul";
+  if (/\bselichos/i.test(lower) || /\bkinnos/i.test(lower)) return "Selichos";
+  if (/\bteshuva/i.test(lower) || /\bshovavim/i.test(lower)) return "Teshuva";
+  if (
+    /\blag\s+b[ao]?m?omer/i.test(lower) ||
+    /\bomer\b/i.test(lower) ||
+    /\bsefiras?\b/i.test(lower)
+  )
+    return "Sefirah & Lag BaOmer";
+  if (/\brosh\s+chodesh/i.test(lower)) return "Rosh Chodesh";
+  if (/\bell?ul\b/i.test(lower)) return "Elul";
   if (/shabbos\s+shuva/i.test(lower)) return "Teshuva";
-  if (/shabbos\s+hagadol/i.test(lower)) return "Pesach";
   return null;
 }
 

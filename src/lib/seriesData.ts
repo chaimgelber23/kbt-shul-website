@@ -1,7 +1,85 @@
 import { fetchAllShiurim } from "./shiurim";
-import { SERIES, SERIES_GROUPS, matchTitleToSeries } from "./seriesConfig";
+import { SERIES, SERIES_GROUPS, classifyYomTovTopic, matchTitleToSeries } from "./seriesConfig";
 import { PARSHIYOS_BY_SEFER } from "./categoryConfig";
-import type { Shiur, SeriesStats, SeriesGroup } from "./types";
+import type { Shiur, SeriesStats, SeriesDef } from "./types";
+
+/**
+ * Series that are dedicated study tracks (a sefer, a Rambam, a navi).
+ * Their shiurim should NOT be cross-pulled into yamim-tovim even if a
+ * title happens to mention a Yom Tov keyword — otherwise the entire
+ * Hilchos Teshuva Rambam series would flood the "Teshuva" chip.
+ */
+const STRUCTURED_SERIES_SLUGS = new Set([
+  "yehoshua",
+  "shoftim",
+  "shmuel",
+  "melachim",
+  "hilchos-teshuva",
+  "hilchos-yesodei-hatorah",
+  "hilchos-talmud-torah",
+  "hilchos-deos",
+  "hilchos-shabbos",
+  "kuzari",
+  "mesilas-yesharim",
+  "nefesh-hachaim",
+  "shir-hashirim",
+  "shemone-perakim",
+  "pirkei-avos",
+  "ruach-chaim",
+  "taryag-mitzvos",
+  "taamei-hamitzvos",
+  "yamim-tovim",
+]);
+
+/**
+ * Match all shiurim that belong to a series.
+ * Uses pattern matching, plus a special case for yamim-tovim that
+ * also pulls in any shiur classified as a Yom Tov topic by content
+ * (e.g., "Halacha series: selling chametz" → Pesach), regardless of
+ * which series the title's primary pattern matched.
+ */
+function filterSeriesShiurim(series: SeriesDef, allShiurim: Shiur[]): Shiur[] {
+  // "Other" is a true catch-all: only shiurim that no specific series claims.
+  // Without this, the catch-all pattern /.+/ matches every title and floods the card.
+  if (series.slug === "other") {
+    const claimed = new Set<string>();
+    for (const other of SERIES) {
+      if (other.slug === "other") continue;
+      for (const shiur of allShiurim) {
+        if (other.patterns.some((p) => p.test(shiur.title))) claimed.add(shiur.id);
+      }
+    }
+    // Also treat yamim-tovim cross-pulls (e.g., "Halacha series: selling chametz")
+    // as claimed, so they don't double-count in Other.
+    for (const shiur of allShiurim) {
+      if (claimed.has(shiur.id)) continue;
+      if (classifyYomTovTopic(shiur.title.toLowerCase()) === null) continue;
+      const primary = matchTitleToSeries(shiur.title);
+      if (primary && STRUCTURED_SERIES_SLUGS.has(primary.slug)) continue;
+      claimed.add(shiur.id);
+    }
+    return allShiurim.filter((s) => !claimed.has(s.id));
+  }
+
+  const matched = allShiurim.filter((shiur) =>
+    series.patterns.some((p) => p.test(shiur.title))
+  );
+
+  if (series.slug !== "yamim-tovim") return matched;
+
+  const seen = new Set(matched.map((s) => s.id));
+  for (const shiur of allShiurim) {
+    if (seen.has(shiur.id)) continue;
+    if (classifyYomTovTopic(shiur.title.toLowerCase()) === null) continue;
+    // Skip shiurim whose primary series is a dedicated study track —
+    // we don't want to flood yamim-tovim with e.g. all of Hilchos Teshuva.
+    const primary = matchTitleToSeries(shiur.title);
+    if (primary && STRUCTURED_SERIES_SLUGS.has(primary.slug)) continue;
+    matched.push(shiur);
+    seen.add(shiur.id);
+  }
+  return matched;
+}
 
 /**
  * Get all shiurim for a specific series, filtered by pattern matching.
@@ -11,9 +89,26 @@ export async function getSeriesShiurim(slug: string): Promise<Shiur[]> {
   if (!series) return [];
 
   const allShiurim = await fetchAllShiurim();
-  return allShiurim.filter((shiur) =>
-    series.patterns.some((p) => p.test(shiur.title))
-  );
+  return filterSeriesShiurim(series, allShiurim);
+}
+
+/**
+ * Build a map from shiur.id → section name for a topic-type series.
+ * The client uses this for filtering by topic chips, so that shiurim
+ * whose section name doesn't appear verbatim in the title (e.g., a
+ * "Shabbos Hagadol" shiur belongs to "Pesach") still get matched.
+ */
+export async function getSeriesSectionMap(slug: string): Promise<Record<string, string>> {
+  const series = SERIES.find((s) => s.slug === slug);
+  if (!series?.extractNav || series.navType !== "topic") return {};
+
+  const shiurim = await getSeriesShiurim(slug);
+  const map: Record<string, string> = {};
+  for (const shiur of shiurim) {
+    const nav = series.extractNav(shiur.title);
+    if (nav.section) map[shiur.id] = nav.section;
+  }
+  return map;
 }
 
 /**
@@ -33,9 +128,7 @@ export async function getLandingData(): Promise<{
   const allStats: SeriesStats[] = [];
 
   for (const series of SERIES) {
-    const matching = allShiurim.filter((shiur) =>
-      series.patterns.some((p) => p.test(shiur.title))
-    );
+    const matching = filterSeriesShiurim(series, allShiurim);
 
     if (matching.length > 0) {
       const latestDate = matching.reduce(

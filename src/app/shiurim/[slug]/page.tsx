@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { getSeriesShiurim, getSeriesNavSections } from "@/lib/seriesData";
+import { getSeriesShiurim, getSeriesNavSections, getSeriesSectionMap } from "@/lib/seriesData";
 import { getSeriesBySlug, getAllSlugs } from "@/lib/seriesConfig";
 import SeriesPageClient from "@/components/shiurim/SeriesPageClient";
 import type { Metadata } from "next";
@@ -34,9 +34,10 @@ export default async function SeriesPage({
   const series = getSeriesBySlug(slug);
   if (!series) notFound();
 
-  const [shiurim, navSections] = await Promise.all([
+  const [shiurim, navSections, sectionMap] = await Promise.all([
     getSeriesShiurim(slug),
     getSeriesNavSections(slug),
+    getSeriesSectionMap(slug),
   ]);
 
   return (
@@ -52,6 +53,7 @@ export default async function SeriesPage({
         }}
         shiurim={shiurim}
         navSections={navSections}
+        sectionMap={sectionMap}
       />
     </Suspense>
   );
