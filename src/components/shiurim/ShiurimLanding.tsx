@@ -41,11 +41,13 @@ export default function ShiurimLanding({
   const [searchQuery, setSearchQuery] = useState("");
   const { playShiur, playerState } = useAudioPlayer();
 
-  // Search results
+  // Search results — leading word-boundary so "noach" doesn't match "Manoach".
   const searchResults = useMemo(() => {
-    if (!searchQuery.trim()) return null;
-    const q = searchQuery.toLowerCase();
-    return allShiurim.filter((s) => s.title.toLowerCase().includes(q));
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return null;
+    const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp(`\\b${escaped}`, "i");
+    return allShiurim.filter((s) => re.test(s.title));
   }, [searchQuery, allShiurim]);
 
   const isSearching = searchQuery.trim().length > 0;

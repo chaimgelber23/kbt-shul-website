@@ -11,8 +11,16 @@ export async function fetchCurrentParsha(): Promise<{
   hebrew: string;
 } | null> {
   try {
+    // _w is the upcoming Saturday's date — Hebcal ignores unknown query params,
+    // but Next.js keys its fetch cache by URL, so a weekly-rotating param prevents
+    // ISR from serving last week's parsha across the Shabbos boundary.
+    const now = new Date();
+    const offset = now.getUTCDay() === 6 ? 0 : (6 - now.getUTCDay());
+    const sat = new Date(now);
+    sat.setUTCDate(sat.getUTCDate() + offset);
+    const weekKey = sat.toISOString().slice(0, 10);
     const res = await fetch(
-      "https://www.hebcal.com/shabbat?cfg=json&geonameid=281184&M=on",
+      `https://www.hebcal.com/shabbat?cfg=json&geonameid=281184&M=on&_w=${weekKey}`,
       { next: { revalidate: 3600 } }
     );
     if (!res.ok) return null;
