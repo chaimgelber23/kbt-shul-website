@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import type { Shiur, SortOrder, NavType, SeriesGroup } from "@/lib/types";
-import { PARSHIYOS_BY_SEFER, canonicalParsha, getParshaVariants, splitParshaNames } from "@/lib/categoryConfig";
+import { PARSHIYOS_BY_SEFER, canonicalParsha, splitParshaNames, shiurBelongsToParsha } from "@/lib/categoryConfig";
 import { useAudioPlayer } from "./AudioPlayerProvider";
 import { getRecommendedShiur, getNextShiur } from "@/lib/progress";
 import SeriesHero from "./SeriesHero";
@@ -92,29 +92,13 @@ export default function SeriesPageClient({
       // For parsha, filter by parsha name in title (variant-aware).
       // A double parsha subSection (e.g., "Acharei Mos - Kedoshim") matches shiurim on either half.
       if (selectedSubSection) {
-        const variants = splitParshaNames(selectedSubSection).flatMap((n) =>
-          getParshaVariants(n)
-        );
-        filtered = filtered.filter((s) => {
-          const titleLower = s.title.toLowerCase();
-          return variants.some((v) =>
-            titleLower.includes(`parshas ${v}`) ||
-            titleLower.includes(`parsha ${v}`)
-          );
-        });
+        filtered = filtered.filter((s) => shiurBelongsToParsha(s, selectedSubSection));
       } else {
-        // Filter by all parshiyos in selected sefer (variant-aware)
+        // Filter by all parshiyos in the selected sefer.
         const parshiyos = PARSHIYOS_BY_SEFER[selectedSection] || [];
-        filtered = filtered.filter((s) => {
-          const titleLower = s.title.toLowerCase();
-          return parshiyos.some((p) => {
-            const variants = getParshaVariants(p);
-            return variants.some((v) =>
-              titleLower.includes(`parshas ${v}`) ||
-              titleLower.includes(`parsha ${v}`)
-            );
-          });
-        });
+        filtered = filtered.filter((s) =>
+          parshiyos.some((p) => shiurBelongsToParsha(s, p)),
+        );
       }
     } else if (selectedSection && series.navType === "perek") {
       // Filter by perek number

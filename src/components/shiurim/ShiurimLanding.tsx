@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import type { Shiur, SeriesStats } from "@/lib/types";
-import { getParshaVariants, splitParshaNames } from "@/lib/categoryConfig";
+import { shiurBelongsToParsha } from "@/lib/categoryConfig";
 import { useAudioPlayer } from "./AudioPlayerProvider";
 import ShiurimHero from "./ShiurimHero";
 import SearchBar from "./SearchBar";
@@ -53,21 +53,12 @@ export default function ShiurimLanding({
   const isSearching = searchQuery.trim().length > 0;
 
   // Find ALL parsha shiurim for "This Week's Parsha" (don't slice — we need the total count).
-  // Double parshiyos (e.g., "Acharei Mos - Kedoshim") match shiurim on either constituent parsha.
+  // The shared matcher is spelling/apostrophe tolerant and double-parsha aware
+  // (a "Behar" week matches a "Behar-Bechukosai" shiur, and vice-versa).
   const parshaShiurim = useMemo(() => {
     if (!currentParsha) return [];
-    const parshaNames = splitParshaNames(currentParsha.name);
-    const lowerNames = parshaNames.map((n) => n.toLowerCase());
-    const variants = parshaNames.flatMap((n) => getParshaVariants(n));
     return allShiurim
-      .filter((s) => {
-        if (s.subLevel2 && lowerNames.includes(s.subLevel2.toLowerCase())) return true;
-        const titleLower = s.title.toLowerCase();
-        return variants.some((v) =>
-          titleLower.includes(`parshas ${v}`) ||
-          titleLower.includes(`parsha ${v}`)
-        );
-      })
+      .filter((s) => shiurBelongsToParsha(s, currentParsha.name))
       .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
   }, [allShiurim, currentParsha]);
 
