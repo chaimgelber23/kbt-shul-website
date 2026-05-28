@@ -151,9 +151,18 @@ export function lookupSefer(name) {
 // "Parshas Tzav /Shabbos hagadol" yields "Tzav".
 const TITLE_RE = /^\s*parsh(?:as|us|at|ah|a)?\s+([a-z‘’'`´\- ]+?)(?:[,.;:\/]|\s+[-–]|\s+\d|$)/i;
 
+// The Arba Parshiyos (Shekalim, Zachor, Parah, Hachodesh) are special maftir
+// readings, not weekly sedras — each is read on a regular parsha week. A title
+// like "Parshas Hachodesh - Vayakhel ..." names the real weekly parsha after
+// the dash, so resolve to that instead of the special-reading name.
+const SPECIAL_THEN_PARSHA_RE = /^\s*parsh(?:as|us|at|ah|a)?\s+(?:ha[‘’'`´]?chodesh|shekalim|shkalim|zachor|zochor|parah|poroh)\s*[-–]\s*([a-z‘’'`´ ]+?)(?:[,.;:\/]|\s+[-–]|\s+\d|$)/i;
+
 /** Extract the raw parsha string from a shiur title, or null if it isn't a parsha shiur. */
 export function extractParshaFromTitle(title) {
-  const m = String(title || "").match(TITLE_RE);
+  const s = String(title || "");
+  const special = s.match(SPECIAL_THEN_PARSHA_RE);
+  if (special && special[1].trim()) return special[1].trim();
+  const m = s.match(TITLE_RE);
   if (!m) return null;
   const raw = m[1].trim();
   return raw || null;

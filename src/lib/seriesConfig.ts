@@ -1,4 +1,6 @@
 import type { SeriesDef } from "./types";
+// Single-source parsha extraction (spelling-tolerant + Arba-Parshiyos aware).
+import { extractParshaFromTitle } from "./parsha-map.mjs";
 
 // --- Helpers for extracting navigation info from titles ---
 
@@ -18,6 +20,17 @@ function extractHalachaTopic(title: string): { section?: string; detail?: string
 
 /** Map Yamim Tovim / topic categories from a title (used by Machshava + standalone Yom Tov) */
 export function classifyYomTovTopic(lower: string): string | null {
+  // Tu BiShvat first — "Rosh Hashana La'ilanos" must resolve here, not to the
+  // Rosh Hashana Yom Tov below.
+  if (
+    /\btu\s+b[i'’]?sh?vat\b/i.test(lower) ||
+    /\b(?:15th|fifteenth)\s+of\s+shvat\b/i.test(lower) ||
+    /\bchamish[ao]\s+asar\s+b[i'’]?shvat\b/i.test(lower) ||
+    /rosh\s+hashana\s+la[''’]?ilanos/i.test(lower) ||
+    /\bilanos\b/i.test(lower) ||
+    /new\s+year\s+for\s+(?:the\s+)?trees/i.test(lower)
+  )
+    return "Tu BiShvat";
   if (
     /\brosh\s+hashana/i.test(lower) ||
     /\bshofar/i.test(lower) ||
@@ -93,6 +106,13 @@ export function classifyYomTovTopic(lower: string): string | null {
     /\bbein\s+ha[\-\s]?metzarim/i.test(lower)
   )
     return "Tisha B'Av";
+  if (
+    /\btu\s+b[''’]?av\b/i.test(lower) ||
+    /\btu\s+beav\b/i.test(lower) ||
+    /\b(?:15th|fifteenth)\s+of\s+av\b/i.test(lower) ||
+    /\bchamish[ao]\s+asar\s+b[''’]?av\b/i.test(lower)
+  )
+    return "Tu B'Av";
   if (/\bteves\b/i.test(lower) || /10th of teves/i.test(lower) || /asara b'teves/i.test(lower) || /tenth of teves/i.test(lower))
     return "Asara B'Teves";
   if (/\bselichos/i.test(lower) || /\bkinnos/i.test(lower)) return "Selichos";
@@ -321,8 +341,9 @@ export const SERIES: SeriesDef[] = [
       /^[Ee]ll?ul/i,
       /^Teshuva[\s\-–:]/i,
       /^Drasha\s+before\s+neila/i,
+      /^Tu\s+B/i,
       // Machshava Yom Tov titles (capture before generic ^Machshava)
-      /^Machshava\s+[\s\S]*?(?:rosh\s+hashana|shofar|tekiy|malchuyos|zichronos|yom\s+kippur|neila|kohain\s+gadol|sukk?os|hoshana|arava|simchas\s+torah|hakafos|hatkafos|koheles|chanuk|channuk|purim|pesach|seder\b|hagad|matza|egypt|pharoh|shavuos|sinai|naaseh|tisha|tammuz|teves|selichos|kinnos|teshuva|shovavim|lag\s+b|omer|rosh\s+chodesh|ellul|elul|shabbos\s+shuva|shabbos\s+hagadol)/i,
+      /^Machshava\s+[\s\S]*?(?:rosh\s+hashana|shofar|tekiy|malchuyos|zichronos|yom\s+kippur|neila|kohain\s+gadol|sukk?os|hoshana|arava|simchas\s+torah|hakafos|hatkafos|koheles|chanuk|channuk|purim|pesach|seder\b|hagad|matza|egypt|pharoh|shavuos|sinai|naaseh|tisha|tammuz|teves|selichos|kinnos|teshuva|shovavim|lag\s+b|omer|tu\s+b[i'’]?sh?vat|tu\s+b[''’]?av|ilanos|rosh\s+chodesh|ellul|elul|shabbos\s+shuva|shabbos\s+hagadol)/i,
     ],
     group: null,
     navType: "topic",
@@ -441,8 +462,8 @@ export const SERIES: SeriesDef[] = [
     group: null,
     navType: "parsha",
     extractNav: (t) => {
-      const match = t.match(/^Parshas?\s+([A-Za-z'`\- ]+?)(?:[,.:;]|\s+[-–]|\s+\d|$)/i);
-      return match ? { section: match[1].trim() } : {};
+      const section = extractParshaFromTitle(t);
+      return section ? { section } : {};
     },
   },
 
