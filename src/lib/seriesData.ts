@@ -12,8 +12,10 @@ import type { Shiur, SeriesStats, SeriesDef } from "./types";
 const STRUCTURED_SERIES_SLUGS = new Set([
   "yehoshua",
   "shoftim",
-  "shmuel",
-  "melachim",
+  "shmuel-i",
+  "shmuel-ii",
+  "melachim-i",
+  "melachim-ii",
   "hilchos-teshuva",
   "hilchos-yesodei-hatorah",
   "hilchos-talmud-torah",

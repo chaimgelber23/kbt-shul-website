@@ -182,27 +182,65 @@ export const SERIES: SeriesDef[] = [
     sortDefault: "oldest",
     displayOrder: 2,
   },
+  // Shmuel and Melachim are each two seforim (Aleph/Beis = I/II). They are kept
+  // as separate series so the perek navigation doesn't mix Aleph and Beis.
+  // The patterns are MUTUALLY EXCLUSIVE (the "I" pattern uses a negative
+  // lookahead to reject the "II"/Beis titles) so a shiur lands in exactly one
+  // series under both matchTitleToSeries (order) and filterSeriesShiurim (raw
+  // pattern test). A title with no part marker defaults to Aleph (I), since the
+  // Rav's Beis titles are always explicitly marked "II"/"Beis".
   {
-    slug: "shmuel",
-    name: "Shmuel",
-    description: "Sefer Shmuel — from the birth of Shmuel HaNavi through the reign of Dovid HaMelech.",
-    patterns: [/^Shmuel/i],
+    slug: "shmuel-i",
+    name: "Shmuel I",
+    description: "Sefer Shmuel Aleph — from the birth of Shmuel HaNavi through the reign of Shaul HaMelech.",
+    // "Shmuel", "Shmuel I", "Shmuel, perek N" — but NOT "Shmuel II"/"Shmuel Beis".
+    patterns: [/^Shmuel\b(?!\s*(?:I{2,}|Beis|Bais)\b)/i],
     group: "navi",
     navType: "perek",
-    extractNav: (t) => extractPerek(t, /^Shmuel\s*(?:II?)?[,:]?\s*/i),
+    extractNav: (t) => extractPerek(t, /^Shmuel\s*(?:I{1,2}|Beis|Bais)?[,:]?\s*/i),
     sortDefault: "oldest",
     displayOrder: 3,
   },
   {
-    slug: "melachim",
-    name: "Melachim",
-    description: "Sefer Melachim — from Shlomo HaMelech through the divided kingdom.",
-    patterns: [/^Melachim/i],
+    slug: "shmuel-ii",
+    name: "Shmuel II",
+    description: "Sefer Shmuel Beis — the reign of Dovid HaMelech.",
+    // Explicit "Shmuel II" / "Shmuel Beis" only.
+    patterns: [/^Shmuel\s*(?:I{2,}|Beis|Bais)\b/i],
     group: "navi",
     navType: "perek",
-    extractNav: (t) => extractPerek(t, /^Melachim\s*(?:I+)?[,:]?\s*/i),
+    extractNav: (t) => extractPerek(t, /^Shmuel\s*(?:I{1,2}|Beis|Bais)?[,:]?\s*/i),
     sortDefault: "oldest",
     displayOrder: 4,
+  },
+  {
+    slug: "melachim-i",
+    name: "Melachim I",
+    description: "Sefer Melachim Aleph — from Shlomo HaMelech and the building of the Beis HaMikdash through the divided kingdom.",
+    // "Melachim", "Melachim I", "Melachim, perek N" — but NOT "Melachim II"/"Beis"
+    // and NOT an unmarked perek 23-25 (Melachim Aleph has only 22 perakim).
+    patterns: [/^Melachim\b(?!\s*(?:I{2,}|Beis|Bais)\b)(?![\s,]+(?:perek\s*)?2[3-5]\b)/i],
+    group: "navi",
+    navType: "perek",
+    extractNav: (t) => extractPerek(t, /^Melachim\s*(?:I{1,2}|Beis|Bais)?[,:]?\s*/i),
+    sortDefault: "oldest",
+    displayOrder: 5,
+  },
+  {
+    slug: "melachim-ii",
+    name: "Melachim II",
+    description: "Sefer Melachim Beis — the later kings of Yisrael and Yehuda through the churban.",
+    // Explicit "Melachim II"/"Beis", plus the unambiguous unmarked case: Melachim
+    // Aleph has only 22 perakim, so an unmarked "Melachim perek 23-25" is Beis.
+    patterns: [
+      /^Melachim\s*(?:I{2,}|Beis|Bais)\b/i,
+      /^Melachim[\s,]+(?:perek\s*)?2[3-5]\b/i,
+    ],
+    group: "navi",
+    navType: "perek",
+    extractNav: (t) => extractPerek(t, /^Melachim\s*(?:I{1,2}|Beis|Bais)?[,:]?\s*/i),
+    sortDefault: "oldest",
+    displayOrder: 6,
   },
 
   // ========== HALACHA ==========
