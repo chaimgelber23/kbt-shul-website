@@ -6,6 +6,8 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/components/AuthProvider";
 import AuthModal from "@/components/AuthModal";
 import { useAudioPlayer } from "@/components/shiurim/AudioPlayerProvider";
+import ContinueLearningHero from "@/components/shiurim/ContinueLearningHero";
+import TanachJourney, { type TanachJourneyProps } from "@/components/shiurim/TanachJourney";
 import {
   getAllProgress,
   getProgressPercentage,
@@ -75,6 +77,14 @@ interface LearningStats {
 }
 
 type TabId = "all" | "in-progress" | "completed" | "series";
+type SortBy = "recent" | "title" | "progress-desc" | "progress-asc";
+
+const SORT_OPTIONS: { id: SortBy; label: string }[] = [
+  { id: "recent", label: "Recently played" },
+  { id: "progress-desc", label: "Closest to done" },
+  { id: "progress-asc", label: "Just started" },
+  { id: "title", label: "Title (A–Z)" },
+];
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -412,14 +422,24 @@ export default function MyLearningClient({
   allSeries,
   groups,
   shiurLookup,
+  track,
 }: {
   allSeries: SeriesInfo[];
   groups: GroupInfo[];
   shiurLookup: Record<string, { title: string; audioUrl: string }>;
+  track: Omit<TanachJourneyProps, never> | null;
 }) {
   const { user, loading: authLoading } = useAuth();
   const { playShiur, playerState } = useAudioPlayer();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [sortBy, setSortBy] = useState<SortBy>("recent");
+  const [query, setQuery] = useState("");
+
+  const seriesNames = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const s of allSeries) m[s.slug] = s.name;
+    return m;
+  }, [allSeries]);
   const [stats, setStats] = useState<LearningStats>({
     totalShiurim: 0, completedShiurim: 0, inProgressShiurim: 0,
     seriesStarted: 0, totalMinutes: 0, streak: 0,
@@ -465,10 +485,36 @@ export default function MyLearningClient({
   };
 
   const filteredShiurim = useMemo(() => {
-    if (activeTab === "in-progress") return allShiurimList.filter((s) => !s.completed);
-    if (activeTab === "completed") return allShiurimList.filter((s) => s.completed);
-    return allShiurimList; // "all"
-  }, [allShiurimList, activeTab]);
+    let list =
+      activeTab === "in-progress"
+        ? allShiurimList.filter((s) => !s.completed)
+        : activeTab === "completed"
+        ? allShiurimList.filter((s) => s.completed)
+        : allShiurimList; // "all"
+
+    const q = query.trim().toLowerCase();
+    if (q) {
+      list = list.filter(
+        (s) => s.title.toLowerCase().includes(q) || s.seriesName.toLowerCase().includes(q)
+      );
+    }
+
+    const sorted = [...list];
+    switch (sortBy) {
+      case "title":
+        sorted.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+      case "progress-desc":
+        sorted.sort((a, b) => b.progress - a.progress);
+        break;
+      case "progress-asc":
+        sorted.sort((a, b) => a.progress - b.progress);
+        break;
+      default: // "recent" — already lastListened desc from allShiurimList
+        sorted.sort((a, b) => new Date(b.lastListened).getTime() - new Date(a.lastListened).getTime());
+    }
+    return sorted;
+  }, [allShiurimList, activeTab, sortBy, query]);
 
   const filteredCards = useMemo(() => {
     return cards; // series tab always shows all series
@@ -510,16 +556,19 @@ export default function MyLearningClient({
   return (
     <main className="min-h-screen bg-bg-light">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-navy to-navy-light text-white py-16 px-6">
+      <section className="bg-gradient-to-br from-navy to-navy-light text-white pt-16 pb-20 px-6">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+          <h1 className="serif-heading text-4xl md:text-5xl font-bold mb-4">
             {user ? `Welcome back${user.displayName ? `, ${user.displayName.split(" ")[0]}` : ""}` : "My Learning"}
           </h1>
           <p className="text-white/80 text-lg">
-            {user ? "Continue your Torah learning journey" : "Track your Torah learning journey"}
+            {user ? "Pick up exactly where you left off" : "Track your Torah learning journey"}
           </p>
         </div>
       </section>
+
+      {/* Continue where you left off — overlaps the hero */}
+      <ContinueLearningHero seriesNames={seriesNames} />
 
       <section className="py-12 px-6">
         <div className="max-w-6xl mx-auto">
@@ -543,6 +592,13 @@ export default function MyLearningClient({
             <div className="mb-4 flex items-center gap-2 text-navy/50 text-sm">
               <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
               Syncing your progress…
+            </div>
+          )}
+
+          {/* Your Tanach Journey — the Navi seder, in order */}
+          {track && (
+            <div className="mb-12">
+              <TanachJourney {...track} />
             </div>
           )}
 
@@ -615,12 +671,44 @@ export default function MyLearningClient({
                   ))}
                 </div>
 
+                {/* Sort + search row (find the shiur you're on) */}
+                {activeTab !== "series" && (
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+                    <div className="relative flex-1">
+                      <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-navy/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
+                      </svg>
+                      <input
+                        type="text"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Find a shiur in your learning…"
+                        className="w-full bg-white border border-primary/15 rounded-xl pl-9 pr-3 py-2.5 text-sm text-navy placeholder:text-navy/35 shadow-sm focus:border-primary/40 transition-colors"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-navy/50 text-sm">Sort</span>
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value as SortBy)}
+                        className="bg-white border border-primary/15 rounded-xl px-3 py-2.5 text-sm font-medium text-navy shadow-sm focus:border-primary/40 transition-colors cursor-pointer"
+                      >
+                        {SORT_OPTIONS.map((o) => (
+                          <option key={o.id} value={o.id}>{o.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+
                 {/* Individual shiurim list (All / In Progress / Completed) */}
                 {activeTab !== "series" && (
                   filteredShiurim.length === 0 ? (
                     <div className="text-center py-16">
                       <p className="text-navy/40 text-lg">
-                        {activeTab === "completed"
+                        {query.trim()
+                          ? `No shiurim match “${query.trim()}”.`
+                          : activeTab === "completed"
                           ? "Keep going! You haven't finished a shiur yet."
                           : activeTab === "in-progress"
                           ? "No shiurim in progress right now."

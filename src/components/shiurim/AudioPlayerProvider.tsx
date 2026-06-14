@@ -18,7 +18,7 @@ import {
 
 interface AudioPlayerContextType {
   playerState: PlayerState;
-  playShiur: (shiur: Shiur, startFromBeginning?: boolean, seriesSlug?: string, nextShiur?: Shiur | null) => void;
+  playShiur: (shiur: Shiur, startFromBeginning?: boolean, seriesSlug?: string, nextShiur?: Shiur | null, nextSeriesSlug?: string | null) => void;
   togglePlayPause: () => void;
   seek: (time: number) => void;
   skipBack: () => void;
@@ -47,6 +47,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const nextShiurRef = useRef<Shiur | null>(null);
+  const nextSeriesSlugRef = useRef<string | null>(null);
   const seriesSlugRef = useRef<string | null>(null);
   const currentShiurRef = useRef<Shiur | null>(null);
   const progressSaveIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -90,14 +91,21 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Auto-advance to next shiur if available
+      // Auto-advance to next shiur if available (one hop). Clear the refs FIRST
+      // so the advanced-to shiur doesn't replay itself in a loop when it ends,
+      // and re-point seriesSlugRef at the next shiur's series so its progress is
+      // attributed correctly (critical for the cross-sefer Tanach journey).
       if (nextShiurRef.current) {
         const nextShiur = nextShiurRef.current;
+        const nextSeries = nextSeriesSlugRef.current;
+        nextShiurRef.current = null;
+        nextSeriesSlugRef.current = null;
         setTimeout(() => {
           if (audioRef.current) {
             audioRef.current.src = nextShiur.audioUrl;
             audioRef.current.currentTime = 0;
             audioRef.current.play();
+            seriesSlugRef.current = nextSeries;
             setPlayerState((prev) => ({
               ...prev,
               currentShiur: nextShiur,
@@ -173,13 +181,16 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   }, [playerState.isPlaying, playerState.currentShiur, playerState.duration]);
 
   const playShiur = useCallback(
-    (shiur: Shiur, startFromBeginning = false, seriesSlug?: string, nextShiur?: Shiur | null) => {
+    (shiur: Shiur, startFromBeginning = false, seriesSlug?: string, nextShiur?: Shiur | null, nextSeriesSlug?: string | null) => {
       const audio = audioRef.current;
       if (!audio) return;
 
-      // Store series context and next shiur for auto-advance
+      // Store series context and next shiur for auto-advance. nextSeriesSlug lets
+      // the next shiur (which may be the first of the NEXT sefer) be attributed to
+      // its own series; defaults to the current series for within-series advances.
       seriesSlugRef.current = seriesSlug || null;
       nextShiurRef.current = nextShiur || null;
+      nextSeriesSlugRef.current = nextSeriesSlug ?? seriesSlug ?? null;
 
       if (currentShiurRef.current?.id === shiur.id) {
         if (audio.paused) {

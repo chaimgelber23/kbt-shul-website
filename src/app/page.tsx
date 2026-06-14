@@ -100,26 +100,30 @@ export default function Home() {
         variants={stagger}
         className="py-24 bg-bg-alt px-6"
       >
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-3xl mx-auto text-center">
+          <motion.p variants={fadeUp} className="eyebrow mb-4">
+            Welcome to Kahal Beis Tefilla
+          </motion.p>
           <motion.h2
             variants={fadeUp}
-            className="serif-heading text-navy text-4xl font-bold mb-8"
+            className="serif-heading text-navy text-4xl md:text-5xl font-bold mb-7"
           >
             A Warm Jerusalem Home
           </motion.h2>
           <motion.div
             variants={fadeUp}
-            className="w-20 h-1 bg-primary mx-auto mb-10"
+            className="gold-divider mx-auto mb-10"
           />
           <motion.p
             variants={fadeUp}
-            className="text-navy/80 text-xl leading-relaxed font-light italic"
+            className="serif-heading text-navy/80 text-2xl md:text-[1.7rem] leading-[1.5] font-normal italic text-pretty"
+            style={{ letterSpacing: "0" }}
           >
             &ldquo;Ramat Eshkol has become the first choice for many families
             looking to call Yerushalayim their home. For a location to become
             home, it needs more than a comfortable apartment &mdash; it requires
             an environment where one feels accepted and has friends who care.
-            Kahal Beis Tefilla is first and foremost a community. It is the
+            Kahal Beis Tefilla is first and foremost a community &mdash; the
             place to form friendships and feel welcome.&rdquo;
           </motion.p>
         </div>
@@ -210,11 +214,13 @@ export default function Home() {
         className="py-24 px-6 bg-bg-alt"
       >
         <div className="max-w-7xl mx-auto">
-          <motion.div variants={fadeUp} className="mb-16">
-            <h2 className="serif-heading text-navy text-4xl font-bold">
+          <motion.div variants={fadeUp} className="mb-14">
+            <p className="eyebrow mb-3">Get Involved</p>
+            <h2 className="serif-heading text-navy text-4xl md:text-5xl font-bold">
               Community Programs
             </h2>
-            <p className="text-navy/60 mt-2">
+            <div className="gold-divider mt-5 mb-4" />
+            <p className="text-navy/60 text-lg">
               Engage, grow, and connect through our diverse offerings
             </p>
           </motion.div>
@@ -295,20 +301,21 @@ export default function Home() {
             />
           </div>
           <div className="flex-1 p-10 md:p-16 flex flex-col justify-center">
-            <h2 className="serif-heading text-navy text-4xl font-bold mb-4">
+            <p className="eyebrow mb-3">Partner With Us</p>
+            <h2 className="serif-heading text-navy text-4xl md:text-5xl font-bold mb-5">
               Support Our Sanctuary
             </h2>
-            <p className="text-navy/70 text-lg leading-relaxed mb-8">
+            <p className="text-navy/70 text-lg leading-relaxed mb-8 text-pretty">
               Kahal Beis Tefilla relies on the generosity of our members and
               friends. Your contributions directly support our daily operations,
               kollelim, shiurim, and community chesed programs.
             </p>
             <div>
-              <Link
-                href="/donate"
-                className="bg-primary text-navy px-12 py-5 rounded-xl font-bold text-xl hover:shadow-lg hover:-translate-y-1 transition-all inline-flex items-center gap-3"
-              >
+              <Link href="/donate" className="btn btn-primary px-10 py-4 text-lg">
                 Donate Now
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
               </Link>
             </div>
           </div>

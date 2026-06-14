@@ -10,6 +10,7 @@ import ShiurimHero from "./ShiurimHero";
 import SearchBar from "./SearchBar";
 import SeriesCard from "./SeriesCard";
 import ShiurCard from "./ShiurCard";
+import ContinueLearningHero from "./ContinueLearningHero";
 import SignInBanner from "../SignInBanner";
 
 const fadeUp = {
@@ -73,9 +74,20 @@ export default function ShiurimLanding({
 
   const displayedParshaShiurim = parshaShiurim.length > 0 ? parshaShiurim.slice(0, 3) : latestParshaShiurim;
 
+  // Slug → display name, so the Continue hero can label the series nicely.
+  const seriesNames = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const s of ungrouped) m[s.slug] = s.name;
+    for (const g of groups) for (const s of g.series) m[s.slug] = s.name;
+    return m;
+  }, [ungrouped, groups]);
+
   return (
     <main className="min-h-screen">
       <ShiurimHero totalCount={totalCount} />
+
+      {/* Continue where you left off — greets returning / just-signed-in learners */}
+      <ContinueLearningHero seriesNames={seriesNames} />
 
       {/* This Week's Parsha — always show as the first content */}
       {displayedParshaShiurim.length > 0 && !isSearching && (

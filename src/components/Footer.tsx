@@ -3,8 +3,11 @@ import Image from "next/image";
 
 export default function Footer() {
   return (
-    <footer className="bg-navy pt-20 pb-10 px-6 text-white border-t border-primary/20">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
+    <footer className="relative bg-navy pt-20 pb-10 px-6 text-white border-t border-primary/20">
+      {/* Subtle gold top-accent line */}
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+
+      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12 md:gap-10 mb-16 md:mb-20">
         {/* Logo & Description */}
         <div>
           <div className="mb-6">
@@ -17,7 +20,7 @@ export default function Footer() {
               unoptimized
             />
           </div>
-          <p className="text-white/60 text-sm leading-relaxed mb-6">
+          <p className="text-white/60 text-sm leading-relaxed text-pretty">
             A fortress of Torah in the heart of Ramat Eshkol, Jerusalem. Growing
             together in Torah and Avodas Hashem under the leadership of Rabbi
             Dovid Steinhauer.
@@ -26,10 +29,10 @@ export default function Footer() {
 
         {/* Quick Links */}
         <div>
-          <h4 className="text-primary font-bold text-lg mb-6 uppercase tracking-wider">
+          <h4 className="text-primary font-bold text-sm mb-6 uppercase tracking-[0.18em]">
             Quick Links
           </h4>
-          <ul className="space-y-4 text-white/70 text-sm font-medium">
+          <ul className="space-y-3.5 text-white/70 text-sm font-medium">
             <li>
               <Link
                 href="/about"
@@ -83,10 +86,10 @@ export default function Footer() {
 
         {/* Davening */}
         <div>
-          <h4 className="text-primary font-bold text-lg mb-6 uppercase tracking-wider">
+          <h4 className="text-primary font-bold text-sm mb-6 uppercase tracking-[0.18em]">
             Davening
           </h4>
-          <ul className="space-y-4 text-white/70 text-sm font-medium">
+          <ul className="space-y-3.5 text-white/70 text-sm font-medium">
             <li>
               <Link
                 href="/davening"
@@ -116,10 +119,10 @@ export default function Footer() {
 
         {/* Contact */}
         <div>
-          <h4 className="text-primary font-bold text-lg mb-6 uppercase tracking-wider">
+          <h4 className="text-primary font-bold text-sm mb-6 uppercase tracking-[0.18em]">
             Contact Us
           </h4>
-          <ul className="space-y-4 text-white/70 text-sm font-medium">
+          <ul className="space-y-3.5 text-white/70 text-sm font-medium">
             <li className="flex gap-3">
               <svg className="w-4 h-4 text-primary shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
               <span>16b Ramat Hagolan St, Jerusalem, Israel</span>
@@ -137,9 +140,12 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto pt-8 border-t border-white/10 text-center text-white/40 text-xs tracking-widest uppercase">
-        &copy; {new Date().getFullYear()} Kahal Beis Tefilla Jerusalem. All
-        rights reserved.
+      <div className="max-w-7xl mx-auto pt-8 border-t border-white/10 text-center">
+        <div className="gold-divider mx-auto mb-6" />
+        <p className="text-white/40 text-xs tracking-widest uppercase">
+          &copy; {new Date().getFullYear()} Kahal Beis Tefilla Jerusalem. All
+          rights reserved.
+        </p>
       </div>
     </footer>
   );

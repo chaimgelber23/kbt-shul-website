@@ -43,6 +43,13 @@ service-account-key.json
 /scripts/temp/
 /scripts/bin/
 
+# local dev / audit artifacts (not for prod)
+/temporary-screenshots/
+dev-server.log
+*.log
+/scripts/audit-shots.mjs
+/scripts/seed-and-shoot.mjs
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import type { Shiur, SortOrder, NavType, SeriesGroup } from "@/lib/types";
@@ -36,11 +37,18 @@ export default function SeriesPageClient({
   shiurim,
   navSections,
   sectionMap = {},
+  trackNext = null,
+  nextSeriesSlug = null,
+  nextSeriesName = null,
 }: {
   series: SeriesInfo;
   shiurim: Shiur[];
   navSections: string[];
   sectionMap?: Record<string, string>;
+  /** First shiur of the next sefer in the track (for cross-sefer continuation). */
+  trackNext?: Shiur | null;
+  nextSeriesSlug?: string | null;
+  nextSeriesName?: string | null;
 }) {
   const [sortOrder, setSortOrder] = useState<SortOrder>(series.sortDefault);
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
@@ -77,6 +85,17 @@ export default function SeriesPageClient({
   const recommendedShiur = useMemo(() => {
     return getRecommendedShiur(series.slug, shiurim);
   }, [series.slug, shiurim]);
+
+  // Next shiur to play after `id` — advances through the full sefer, then rolls
+  // into the first shiur of the next sefer in the seder (cross-sefer journey).
+  // Returns the shiur AND the series it belongs to, so the player attributes
+  // the auto-advanced shiur's progress to the correct sefer.
+  const nextFor = (id: string): { shiur: Shiur | null; seriesSlug: string } => {
+    const within = getNextShiur(shiurim, id);
+    if (within) return { shiur: within, seriesSlug: series.slug };
+    if (trackNext) return { shiur: trackNext, seriesSlug: nextSeriesSlug || series.slug };
+    return { shiur: null, seriesSlug: series.slug };
+  };
 
   // For parsha: need the parsha names within a sefer
   const parshaSubSections = useMemo(() => {
@@ -148,8 +167,8 @@ export default function SeriesPageClient({
       setVisibleCount(idx + PAGE_SIZE);
     }
     // Auto-play the linked shiur
-    const next = getNextShiur(shiurim, target.id);
-    playShiur(target, false, series.slug, next);
+    const n = nextFor(target.id);
+    playShiur(target, false, series.slug, n.shiur, n.seriesSlug);
     // Scroll to the card after render
     setTimeout(() => {
       const el = document.getElementById(`shiur-${shiurId}`);
@@ -191,8 +210,8 @@ export default function SeriesPageClient({
                     ? recommendedShiur.shiur
                     : (recommendedShiur.shiur || recommendedShiur.lastListenedShiur);
                   if (!shiurToPlay) return;
-                  const nextShiur = getNextShiur(shiurim, shiurToPlay.id);
-                  playShiur(shiurToPlay, false, series.slug, nextShiur);
+                  const n = nextFor(shiurToPlay.id);
+                  playShiur(shiurToPlay, false, series.slug, n.shiur, n.seriesSlug);
                 }}
                 className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-primary text-white shadow-md hover:bg-primary-light transition-all flex items-center gap-2"
               >
@@ -386,12 +405,12 @@ export default function SeriesPageClient({
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {visible.map((shiur) => {
-              const nextShiur = getNextShiur(filteredShiurim, shiur.id);
+              const n = nextFor(shiur.id);
               return (
                 <motion.div key={shiur.id} id={`shiur-${shiur.id}`} variants={fadeUp}>
                   <ShiurCard
                     shiur={shiur}
-                    onPlay={(s) => playShiur(s, false, series.slug, nextShiur)}
+                    onPlay={(s) => playShiur(s, false, series.slug, n.shiur, n.seriesSlug)}
                     isCurrentlyPlaying={
                       playerState.currentShiur?.id === shiur.id &&
                       playerState.isPlaying
@@ -430,6 +449,27 @@ export default function SeriesPageClient({
                 </span>
               </button>
             </div>
+          )}
+
+          {/* Next in the seder (cross-sefer journey) */}
+          {nextSeriesSlug && nextSeriesName && (
+            <Link
+              href={`/shiurim/${nextSeriesSlug}`}
+              className="group mt-12 flex items-center justify-between gap-4 rounded-2xl border border-primary/20 bg-white p-5 sm:p-6 shadow-card hover:shadow-card-hover hover:border-primary/40 transition-all"
+            >
+              <div className="min-w-0">
+                <p className="eyebrow mb-1">Next in the seder</p>
+                <p className="serif-heading text-navy text-xl font-bold truncate group-hover:text-primary transition-colors">
+                  {nextSeriesName}
+                </p>
+                <p className="text-navy/50 text-sm mt-0.5">Continue your Tanach journey →</p>
+              </div>
+              <span className="shrink-0 w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </span>
+            </Link>
           )}
         </div>
       </section>

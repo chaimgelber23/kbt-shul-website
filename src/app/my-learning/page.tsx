@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import MyLearningClient from "@/components/shiurim/MyLearningClient";
-import { getLandingData } from "@/lib/seriesData";
+import { getLandingData, getTrackData } from "@/lib/seriesData";
 import { fetchAllShiurim } from "@/lib/shiurim";
+import type { JourneyShiur, JourneySeries } from "@/components/shiurim/TanachJourney";
 
 export const revalidate = 3600;
 
@@ -11,7 +12,33 @@ export const metadata: Metadata = {
 };
 
 export default async function MyLearningPage() {
-  const [data, allShiurim] = await Promise.all([getLandingData(), fetchAllShiurim()]);
+  const [data, allShiurim, naviTrack] = await Promise.all([
+    getLandingData(),
+    fetchAllShiurim(),
+    getTrackData("navi"),
+  ]);
+
+  // Slim the Navi track down to what the client journey needs.
+  const track = naviTrack
+    ? {
+        label: naviTrack.label,
+        description: naviTrack.description,
+        ordered: naviTrack.ordered.map((e): JourneyShiur => ({
+          id: e.shiur.id,
+          title: e.shiur.title,
+          audioUrl: e.shiur.audioUrl,
+          durationSeconds: e.shiur.durationSeconds,
+          seriesSlug: e.seriesSlug,
+          seriesName: e.seriesName,
+        })),
+        series: naviTrack.series.map((s): JourneySeries => ({
+          slug: s.slug,
+          name: s.name,
+          count: s.count,
+          startIndex: s.startIndex,
+        })),
+      }
+    : null;
 
   const allSeries = [
     ...data.groups.flatMap((g) =>
@@ -28,5 +55,5 @@ export default async function MyLearningPage() {
     shiurLookup[s.id] = { title: s.title, audioUrl: s.audioUrl };
   }
 
-  return <MyLearningClient allSeries={allSeries} groups={groups} shiurLookup={shiurLookup} />;
+  return <MyLearningClient allSeries={allSeries} groups={groups} shiurLookup={shiurLookup} track={track} />;
 }

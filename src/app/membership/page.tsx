@@ -94,15 +94,19 @@ export default function MembershipPage() {
           variants={stagger}
           className="max-w-4xl mx-auto"
         >
+          <motion.p variants={fadeUp} className="eyebrow mb-4">
+            Join Our Kehilla
+          </motion.p>
           <motion.h1
             variants={fadeUp}
-            className="serif-heading text-primary text-5xl md:text-6xl font-bold mb-6"
+            className="serif-heading text-primary text-5xl md:text-6xl font-bold text-balance"
           >
             Become a Member
           </motion.h1>
+          <motion.div variants={fadeUp} className="gold-divider mx-auto mt-6 mb-6" />
           <motion.p
             variants={fadeUp}
-            className="text-white/80 text-xl font-light max-w-2xl mx-auto"
+            className="text-white/80 text-xl font-light max-w-2xl mx-auto text-pretty"
           >
             Join the Kahal Beis Tefilla family and be part of a thriving Torah
             community in Yerushalayim
@@ -116,28 +120,28 @@ export default function MembershipPage() {
         whileInView="visible"
         viewport={{ once: true }}
         variants={stagger}
-        className="py-20 px-6 bg-bg-alt"
+        className="py-24 px-6 bg-bg-alt"
       >
         <div className="max-w-4xl mx-auto">
+          <motion.p variants={fadeUp} className="eyebrow mb-3">
+            More Than a Shul
+          </motion.p>
           <motion.h2
             variants={fadeUp}
-            className="serif-heading text-navy text-4xl font-bold mb-8"
+            className="serif-heading text-navy text-4xl md:text-5xl font-bold text-balance"
           >
             Why Join Our Kehilla?
           </motion.h2>
-          <motion.div
-            variants={fadeUp}
-            className="w-20 h-1 bg-primary mb-10"
-          />
-          <div className="space-y-6 text-navy/80 text-lg leading-relaxed">
-            <motion.p variants={fadeUp}>
+          <motion.div variants={fadeUp} className="gold-divider mt-5 mb-10" />
+          <div className="space-y-6 text-navy/70 text-lg leading-relaxed">
+            <motion.p variants={fadeUp} className="text-pretty">
               Kahal Beis Tefilla is more than a shul &mdash; it&apos;s a home.
               Whether you&apos;ve lived in Ramat Eshkol for years or just
               arrived in Yerushalayim, becoming a member means joining a warm,
               supportive community united by Torah, Avodah, and Gemilut
               Chasadim.
             </motion.p>
-            <motion.p variants={fadeUp}>
+            <motion.p variants={fadeUp} className="text-pretty">
               Your membership directly supports everything that makes our
               kehilla thrive &mdash; from daily minyanim and shiurim to
               community events, chesed programs, and youth activities. Together,
@@ -153,16 +157,17 @@ export default function MembershipPage() {
         whileInView="visible"
         viewport={{ once: true }}
         variants={stagger}
-        className="py-20 px-6 bg-bg-light"
+        className="py-24 px-6 bg-bg-light"
       >
-        <div className="max-w-5xl mx-auto">
-          <motion.h2
-            variants={fadeUp}
-            className="serif-heading text-navy text-3xl font-bold mb-10 text-center"
-          >
-            What Your Membership Supports
-          </motion.h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="max-w-6xl mx-auto">
+          <motion.div variants={fadeUp} className="text-center mb-14">
+            <p className="eyebrow mb-3">Where Your Support Goes</p>
+            <h2 className="serif-heading text-navy text-4xl md:text-5xl font-bold text-balance">
+              What Your Membership Supports
+            </h2>
+            <div className="gold-divider mx-auto mt-5" />
+          </motion.div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
                 title: "Daily Minyanim",
@@ -192,13 +197,13 @@ export default function MembershipPage() {
               <motion.div
                 key={item.title}
                 variants={fadeUp}
-                className="bg-white border border-primary/15 rounded-xl p-8 shadow-sm text-center"
+                className="card card-hover border border-primary/15 rounded-xl p-8 shadow-card hover:shadow-card-hover text-center"
               >
-                <div className="w-10 h-0.5 bg-primary mx-auto mb-6" />
-                <h3 className="text-navy font-bold text-lg mb-2">
+                <div className="gold-divider mx-auto mb-6" />
+                <h3 className="serif-heading text-navy font-bold text-xl mb-3">
                   {item.title}
                 </h3>
-                <p className="text-navy/60 text-sm">{item.desc}</p>
+                <p className="text-navy/70 text-sm leading-relaxed text-pretty">{item.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -211,18 +216,19 @@ export default function MembershipPage() {
         whileInView="visible"
         viewport={{ once: true }}
         variants={stagger}
-        className="py-20 px-6 bg-bg-alt"
+        className="py-24 px-6 bg-bg-alt"
       >
         <div className="max-w-3xl mx-auto text-center">
-          <motion.h2
-            variants={fadeUp}
-            className="serif-heading text-navy text-3xl font-bold mb-6"
-          >
-            Membership Details
-          </motion.h2>
+          <motion.div variants={fadeUp} className="mb-12">
+            <p className="eyebrow mb-3">Set Up Your Membership</p>
+            <h2 className="serif-heading text-navy text-4xl md:text-5xl font-bold text-balance">
+              Membership Details
+            </h2>
+            <div className="gold-divider mx-auto mt-5" />
+          </motion.div>
           <motion.div
             variants={fadeUp}
-            className="bg-white border-2 border-primary/20 rounded-2xl p-10 shadow-lg mb-12"
+            className="card border-2 border-primary/20 rounded-2xl p-10 shadow-card mb-12"
           >
             <p className="text-navy/60 text-sm uppercase tracking-widest font-semibold mb-3">
               Monthly Membership
@@ -261,19 +267,19 @@ export default function MembershipPage() {
 
           <motion.p
             variants={fadeUp}
-            className="text-navy/70 text-lg mb-10"
+            className="text-navy/70 text-lg mb-10 text-pretty"
           >
             Choose your preferred payment method below to set up your
             membership:
           </motion.p>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <motion.a
               variants={fadeUp}
               href="https://www.matara.pro/nedarimplus/online/?mosad=7012328"
               target="_blank"
               rel="noopener noreferrer"
-              className="group bg-white border-2 border-primary/20 rounded-2xl p-10 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all text-center"
+              className="card card-hover border-2 border-primary/20 rounded-2xl p-10 shadow-card hover:shadow-card-hover text-center flex flex-col"
             >
               <div className="size-20 bg-primary/10 rounded-full mx-auto mb-6 flex items-center justify-center">
                 <span className="text-primary text-4xl">&#x20AA;</span>
@@ -281,11 +287,14 @@ export default function MembershipPage() {
               <h3 className="serif-heading text-navy text-2xl font-bold mb-3">
                 Pay in Shekels
               </h3>
-              <p className="text-navy/60 mb-6">
+              <p className="text-navy/70 mb-8 leading-relaxed text-pretty">
                 Secure credit card payment in Israeli Shekels via Nedarim Plus
               </p>
-              <span className="inline-flex items-center gap-2 bg-primary text-navy px-8 py-3 rounded-xl font-bold group-hover:bg-primary-light transition-colors">
-                Pay Now &#x2192;
+              <span className="btn btn-primary px-8 py-3.5 text-base mt-auto">
+                Pay Now
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
               </span>
             </motion.a>
 
@@ -294,7 +303,7 @@ export default function MembershipPage() {
               href="https://kbt.kollelnernaftali.org/"
               target="_blank"
               rel="noopener noreferrer"
-              className="group bg-white border-2 border-primary/20 rounded-2xl p-10 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all text-center"
+              className="card card-hover border-2 border-primary/20 rounded-2xl p-10 shadow-card hover:shadow-card-hover text-center flex flex-col"
             >
               <div className="size-20 bg-primary/10 rounded-full mx-auto mb-6 flex items-center justify-center">
                 <span className="text-primary text-4xl">$</span>
@@ -302,11 +311,14 @@ export default function MembershipPage() {
               <h3 className="serif-heading text-navy text-2xl font-bold mb-3">
                 Pay via Kollel Ner Naftali
               </h3>
-              <p className="text-navy/60 mb-6">
+              <p className="text-navy/70 mb-8 leading-relaxed text-pretty">
                 Tax-deductible payment through Kollel Ner Naftali (USD)
               </p>
-              <span className="inline-flex items-center gap-2 bg-primary text-navy px-8 py-3 rounded-xl font-bold group-hover:bg-primary-light transition-colors">
-                Pay Now &#x2192;
+              <span className="btn btn-primary px-8 py-3.5 text-base mt-auto">
+                Pay Now
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
               </span>
             </motion.a>
           </div>
@@ -319,26 +331,24 @@ export default function MembershipPage() {
         whileInView="visible"
         viewport={{ once: true }}
         variants={stagger}
-        className="py-20 px-6 bg-bg-light"
+        className="py-24 px-6 bg-bg-light"
       >
         <div className="max-w-2xl mx-auto">
-          <motion.h2
-            variants={fadeUp}
-            className="serif-heading text-navy text-3xl font-bold mb-4 text-center"
-          >
-            Sign Up
-          </motion.h2>
-          <motion.p
-            variants={fadeUp}
-            className="text-navy/60 text-center mb-10"
-          >
-            Fill out the form below to register as a member. Our board will be
-            in touch to welcome you.
-          </motion.p>
+          <motion.div variants={fadeUp} className="text-center mb-10">
+            <p className="eyebrow mb-3">Register Today</p>
+            <h2 className="serif-heading text-navy text-4xl md:text-5xl font-bold text-balance">
+              Sign Up
+            </h2>
+            <div className="gold-divider mx-auto mt-5 mb-4" />
+            <p className="text-navy/60 text-lg text-pretty">
+              Fill out the form below to register as a member. Our board will be
+              in touch to welcome you.
+            </p>
+          </motion.div>
 
           <motion.div variants={fadeUp}>
             {submitted ? (
-              <div className="bg-primary/10 border border-primary/30 rounded-2xl p-12 text-center">
+              <div className="bg-primary/10 border border-primary/30 rounded-2xl p-12 text-center shadow-card">
                 <svg
                   className="w-16 h-16 text-primary mx-auto mb-6"
                   fill="none"
@@ -475,7 +485,7 @@ export default function MembershipPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full bg-primary text-navy px-10 py-4 rounded-xl font-bold text-lg hover:bg-primary-light transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn btn-primary w-full px-10 py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submitting ? "Submitting..." : "Register as Member"}
                 </button>
@@ -486,7 +496,7 @@ export default function MembershipPage() {
       </motion.section>
 
       {/* Closing Quote */}
-      <section className="py-20 px-6 bg-navy text-center">
+      <section className="py-24 px-6 bg-navy text-center">
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -494,10 +504,10 @@ export default function MembershipPage() {
           variants={fadeUp}
           className="max-w-3xl mx-auto"
         >
-          <h2 className="serif-heading text-primary text-3xl font-bold italic mb-6">
+          <h2 className="serif-heading text-primary text-3xl md:text-4xl font-bold italic leading-tight text-balance">
             &ldquo;All of Israel are responsible for one another.&rdquo;
           </h2>
-          <p className="text-white/60 font-semibold tracking-[0.3em] uppercase text-sm">
+          <p className="text-white/60 mt-8 font-semibold tracking-[0.3em] uppercase text-sm">
             &mdash; Shevuos 39a
           </p>
         </motion.div>

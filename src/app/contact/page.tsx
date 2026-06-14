@@ -47,12 +47,16 @@ export default function ContactPage() {
           variants={stagger}
           className="max-w-4xl mx-auto"
         >
+          <motion.p variants={fadeUp} className="eyebrow mb-4">
+            Kahal Beis Tefilla
+          </motion.p>
           <motion.h1
             variants={fadeUp}
-            className="serif-heading text-primary text-5xl md:text-6xl font-bold mb-6"
+            className="serif-heading text-primary text-5xl md:text-6xl font-bold text-balance"
           >
             Contact Us
           </motion.h1>
+          <motion.div variants={fadeUp} className="gold-divider mx-auto mt-6 mb-6" />
           <motion.p
             variants={fadeUp}
             className="text-white/80 text-xl font-light"
@@ -67,14 +71,16 @@ export default function ContactPage() {
         whileInView="visible"
         viewport={{ once: true }}
         variants={stagger}
-        className="py-20 px-6 bg-bg-alt"
+        className="py-24 px-6 bg-bg-alt"
       >
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16">
           {/* Contact Form */}
           <motion.div variants={fadeUp}>
-            <h2 className="serif-heading text-navy text-3xl font-bold mb-8">
+            <p className="eyebrow mb-3">Get In Touch</p>
+            <h2 className="serif-heading text-navy text-4xl md:text-5xl font-bold">
               Send Us a Message
             </h2>
+            <div className="gold-divider mt-5 mb-8" />
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid sm:grid-cols-2 gap-6">
                 <div>
@@ -132,33 +138,38 @@ export default function ContactPage() {
               </div>
               <button
                 type="submit"
-                className="bg-primary text-navy px-10 py-4 rounded-xl font-bold text-lg hover:bg-primary-light transition-all shadow-lg"
+                className="btn btn-primary px-10 py-4 text-lg"
               >
                 Send Message
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
               </button>
             </form>
           </motion.div>
 
           {/* Contact Info & Map */}
           <motion.div variants={fadeUp}>
-            <h2 className="serif-heading text-navy text-3xl font-bold mb-8">
+            <p className="eyebrow mb-3">Our Home in Ramat Eshkol</p>
+            <h2 className="serif-heading text-navy text-4xl md:text-5xl font-bold">
               Visit Us
             </h2>
-            <div className="space-y-6 mb-10">
-              <div className="flex items-start gap-4">
+            <div className="gold-divider mt-5 mb-8" />
+            <div className="space-y-4 mb-10">
+              <div className="card card-hover flex items-start gap-4 p-5">
                 <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
                   <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                 </div>
                 <div>
                   <h3 className="text-navy font-bold text-lg">Address</h3>
-                  <p className="text-navy/70">
+                  <p className="text-navy/70 leading-relaxed">
                     21 Ramat Hagolan Street
                     <br />
                     Jerusalem, Israel
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-4">
+              <div className="card card-hover flex items-start gap-4 p-5">
                 <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
                   <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                 </div>
@@ -172,7 +183,7 @@ export default function ContactPage() {
                   </a>
                 </div>
               </div>
-              <div className="flex items-start gap-4">
+              <div className="card card-hover flex items-start gap-4 p-5">
                 <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
                   <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
                 </div>
@@ -180,7 +191,7 @@ export default function ContactPage() {
                   <h3 className="text-navy font-bold text-lg">
                     Beis Medrash Hours
                   </h3>
-                  <p className="text-navy/70">
+                  <p className="text-navy/70 leading-relaxed">
                     Open daily 6:45 AM &ndash; 11:30 PM
                   </p>
                 </div>
@@ -188,7 +199,7 @@ export default function ContactPage() {
             </div>
 
             {/* Map Embed */}
-            <div className="rounded-2xl overflow-hidden shadow-lg border-2 border-primary/20">
+            <div className="rounded-2xl overflow-hidden shadow-card hover:shadow-card-hover transition-shadow border-2 border-primary/20">
               <iframe
                 src="https://maps.google.com/maps?q=21+Ramat+Hagolan,+Jerusalem,+Israel&t=&z=16&ie=UTF8&iwloc=&output=embed"
                 width="100%"

@@ -23,15 +23,22 @@ export default function ProgramsPage() {
           variants={stagger}
           className="max-w-4xl mx-auto"
         >
+          <motion.p variants={fadeUp} className="eyebrow mb-4">
+            Get Involved
+          </motion.p>
           <motion.h1
             variants={fadeUp}
-            className="serif-heading text-primary text-5xl md:text-6xl font-bold mb-6"
+            className="serif-heading text-primary text-5xl md:text-6xl font-bold text-balance"
           >
             Our Programs
           </motion.h1>
+          <motion.div
+            variants={fadeUp}
+            className="gold-divider mx-auto mt-6 mb-6"
+          />
           <motion.p
             variants={fadeUp}
-            className="text-white/80 text-xl font-light"
+            className="text-white/80 text-xl font-light text-pretty"
           >
             Torah, community, and chesed at the heart of everything we do
           </motion.p>
@@ -45,20 +52,21 @@ export default function ProgramsPage() {
         whileInView="visible"
         viewport={{ once: true }}
         variants={stagger}
-        className="py-20 px-6 bg-bg-alt"
+        className="py-24 px-6 bg-bg-alt"
       >
         <div className="max-w-5xl mx-auto">
-          <motion.div variants={fadeUp} className="flex items-center gap-4 mb-8">
-            <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center">
-              <div className="w-6 h-0.5 bg-primary" />
-            </div>
-            <h2 className="serif-heading text-navy text-4xl font-bold">
+          <motion.div variants={fadeUp} className="mb-12">
+            <p className="eyebrow mb-3">Beis Medrash</p>
+            <h2 className="serif-heading text-navy text-4xl md:text-5xl font-bold">
               Torah Learning
             </h2>
+            <div className="gold-divider mt-5 mb-4" />
+            <p className="text-navy/60 text-lg text-pretty">
+              A Beis Medrash alive from before dawn until late at night
+            </p>
           </motion.div>
-          <motion.div variants={fadeUp} className="w-20 h-1 bg-primary mb-10" />
-          <div className="space-y-6 text-navy/80 text-lg leading-relaxed">
-            <motion.p variants={fadeUp}>
+          <div className="space-y-6 text-navy/70 text-lg leading-relaxed">
+            <motion.p variants={fadeUp} className="text-pretty">
               At the heart of our community lies a deep commitment to Torah
               learning. On a typical day, the Beis Medrash is vibrant from 6:45
               AM until 11:30 PM, hosting two early-morning kollelim before
@@ -66,7 +74,7 @@ export default function ProgramsPage() {
               programs, three night kollelim, and two special sedarim every Erev
               Shabbos &mdash; in addition to numerous daily shiurim.
             </motion.p>
-            <motion.p variants={fadeUp}>
+            <motion.p variants={fadeUp} className="text-pretty">
               Whether our members are learning full-time, working professionals,
               or retirees, everyone is actively engaged in Torah.
             </motion.p>
@@ -100,11 +108,11 @@ export default function ProgramsPage() {
               description="Special learning programs every Friday"
             />
             <Link href="/programs/yahrtzeit-learning" className="group">
-              <div className="bg-white border-2 border-primary/25 rounded-xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+              <div className="card card-hover border-2 border-primary/25 p-6 shadow-card hover:shadow-card-hover">
                 <h4 className="text-navy font-bold text-lg mb-2 group-hover:text-primary transition-colors">
                   Yahrtzeit Learning
                 </h4>
-                <p className="text-navy/60 text-sm">
+                <p className="text-navy/60 text-sm text-pretty">
                   A specific curriculum of Torah learning dedicated to the
                   neshamah of a loved one on their yahrtzeit
                 </p>
@@ -124,20 +132,21 @@ export default function ProgramsPage() {
         whileInView="visible"
         viewport={{ once: true }}
         variants={stagger}
-        className="py-20 px-6 bg-bg-light"
+        className="py-24 px-6 bg-bg-light"
       >
         <div className="max-w-5xl mx-auto">
-          <motion.div variants={fadeUp} className="flex items-center gap-4 mb-8">
-            <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center">
-              <div className="w-6 h-0.5 bg-primary" />
-            </div>
-            <h2 className="serif-heading text-navy text-4xl font-bold">
+          <motion.div variants={fadeUp} className="mb-12">
+            <p className="eyebrow mb-3">Together</p>
+            <h2 className="serif-heading text-navy text-4xl md:text-5xl font-bold">
               Community Events
             </h2>
+            <div className="gold-divider mt-5 mb-4" />
+            <p className="text-navy/60 text-lg text-pretty">
+              A true community center, not just a place for minyanim
+            </p>
           </motion.div>
-          <motion.div variants={fadeUp} className="w-20 h-1 bg-primary mb-10" />
-          <div className="space-y-6 text-navy/80 text-lg leading-relaxed">
-            <motion.p variants={fadeUp}>
+          <div className="space-y-6 text-navy/70 text-lg leading-relaxed">
+            <motion.p variants={fadeUp} className="text-pretty">
               Very few shuls in Yerushalayim serve as true community centers
               &mdash; most simply offer minyanim. At Kahal Beis Tefilla, our
               calendar is filled with weekly kiddushim, festive events for
@@ -145,7 +154,7 @@ export default function ProgramsPage() {
               Sukkos, Chol HaMoed Pesach gatherings, Neilas HaChag on Yom Tov,
               and communal siyumim throughout the year.
             </motion.p>
-            <motion.p variants={fadeUp}>
+            <motion.p variants={fadeUp} className="text-pretty">
               These are designed as family-friendly events, with special
               attention given to engaging children and creating a welcoming
               atmosphere for all. Our shul is not just a place for strangers to
@@ -185,21 +194,22 @@ export default function ProgramsPage() {
         whileInView="visible"
         viewport={{ once: true }}
         variants={stagger}
-        className="py-20 px-6 bg-bg-alt"
+        className="py-24 px-6 bg-bg-alt"
       >
         <div className="max-w-5xl mx-auto">
-          <motion.div variants={fadeUp} className="flex items-center gap-4 mb-8">
-            <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center">
-              <div className="w-6 h-0.5 bg-primary" />
-            </div>
-            <h2 className="serif-heading text-navy text-4xl font-bold">
+          <motion.div variants={fadeUp} className="mb-12">
+            <p className="eyebrow mb-3">Next Generation</p>
+            <h2 className="serif-heading text-navy text-4xl md:text-5xl font-bold">
               Women &amp; Youth
             </h2>
+            <div className="gold-divider mt-5 mb-4" />
+            <p className="text-navy/60 text-lg text-pretty">
+              Nurturing every member of the family
+            </p>
           </motion.div>
-          <motion.div variants={fadeUp} className="w-20 h-1 bg-primary mb-10" />
           <motion.p
             variants={fadeUp}
-            className="text-navy/80 text-lg leading-relaxed mb-12"
+            className="text-navy/70 text-lg leading-relaxed mb-12 text-pretty"
           >
             Our community also offers a variety of shiurim for women,
             girls&apos; Tehillim groups, and popular youth initiatives such as
@@ -237,33 +247,34 @@ export default function ProgramsPage() {
         whileInView="visible"
         viewport={{ once: true }}
         variants={stagger}
-        className="py-20 px-6 bg-bg-light"
+        className="py-24 px-6 bg-bg-light"
       >
         <div className="max-w-5xl mx-auto">
-          <motion.div variants={fadeUp} className="flex items-center gap-4 mb-8">
-            <div className="size-12 bg-primary/10 rounded-xl flex items-center justify-center">
-              <div className="w-6 h-0.5 bg-primary" />
-            </div>
-            <h2 className="serif-heading text-navy text-4xl font-bold">
+          <motion.div variants={fadeUp} className="mb-12">
+            <p className="eyebrow mb-3">Caring For Each Other</p>
+            <h2 className="serif-heading text-navy text-4xl md:text-5xl font-bold">
               Chesed
             </h2>
+            <div className="gold-divider mt-5 mb-4" />
+            <p className="text-navy/60 text-lg text-pretty">
+              Supporting one another quietly, respectfully, and effectively
+            </p>
           </motion.div>
-          <motion.div variants={fadeUp} className="w-20 h-1 bg-primary mb-10" />
-          <div className="space-y-6 text-navy/80 text-lg leading-relaxed">
-            <motion.p variants={fadeUp}>
+          <div className="space-y-6 text-navy/70 text-lg leading-relaxed">
+            <motion.p variants={fadeUp} className="text-pretty">
               Making the move to Yerushalayim is a beautiful and idealistic
               decision &mdash; but it isn&apos;t always easy. The familiar
               support systems many rely on abroad aren&apos;t always available
               here. That&apos;s where community becomes essential.
             </motion.p>
-            <motion.p variants={fadeUp}>
+            <motion.p variants={fadeUp} className="text-pretty">
               The strength of Kahal Beis Tefilla lies in its dedication to
               supporting one another &mdash; whether it&apos;s help with making
               simchos, babysitting in a pinch, accompanying someone in the
               hospital, or networking to find the right doctor, specialist, or a
               little protektzia when needed.
             </motion.p>
-            <motion.p variants={fadeUp}>
+            <motion.p variants={fadeUp} className="text-pretty">
               Our active tzedakah fund and gemach have enabled us to assist
               countless members during times of need &mdash; quietly,
               respectfully, and effectively.
@@ -312,9 +323,9 @@ function ProgramFeature({
   description: string;
 }) {
   return (
-    <div className="bg-white border border-primary/15 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+    <div className="card card-hover border border-primary/15 p-6 shadow-card hover:shadow-card-hover">
       <h4 className="text-navy font-bold text-lg mb-2">{title}</h4>
-      <p className="text-navy/60 text-sm">{description}</p>
+      <p className="text-navy/60 text-sm text-pretty">{description}</p>
     </div>
   );
 }

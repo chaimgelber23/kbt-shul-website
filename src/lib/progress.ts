@@ -302,3 +302,87 @@ export function getProgressPercentage(shiurId: string): number {
   if (!progress || progress.duration === 0) return 0;
   return Math.min(100, Math.round((progress.currentTime / progress.duration) * 100));
 }
+
+/* ------------------------------------------------------------------ */
+/*  "Continue where you left off" — global + ordered-track resume      */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The single most-recently-listened shiur that isn't finished — i.e. exactly
+ * "where you left off." Used for the post-sign-in Continue hero. Returns null
+ * if nothing is in progress.
+ */
+export function getMostRecentResume(): ShiurProgress | null {
+  const all = getAllProgress();
+  const inProgress = Object.values(all).filter(
+    (p) => p.currentTime > 10 && !p.completed
+  );
+  if (inProgress.length === 0) return null;
+  inProgress.sort(
+    (a, b) => new Date(b.lastListened).getTime() - new Date(a.lastListened).getTime()
+  );
+  return inProgress[0];
+}
+
+export interface TrackPlayItem {
+  shiurId: string;
+  seriesSlug: string;
+}
+
+export interface TrackResume {
+  /** Index into the ordered track list to play next, or null when finished. */
+  nextIndex: number | null;
+  /** True when nextIndex points at a shiur you're mid-way through. */
+  shouldResume: boolean;
+  completedCount: number;
+  startedCount: number;
+  total: number;
+  /** True when every shiur in the track is completed. */
+  done: boolean;
+}
+
+/**
+ * Walk an ordered track (e.g., the Navi seder) and decide the next shiur to
+ * play: resume whatever you're in the middle of, else the next unstarted shiur
+ * after the furthest one you've completed, else the very first shiur. This is
+ * what makes "continue in Tanach where you left off, in the seder" work across
+ * seforim — finishing Shmuel I rolls into Shmuel II, then Melachim.
+ */
+export function getTrackResume(ordered: TrackPlayItem[]): TrackResume {
+  const total = ordered.length;
+  let firstNotCompletedIndex = -1;
+  let resumeIndex: number | null = null;
+  let resumeLastListened = 0;
+  let completedCount = 0;
+  let startedCount = 0;
+
+  ordered.forEach((item, i) => {
+    const p = getShiurProgress(item.shiurId);
+    const completed = !!p?.completed;
+    const started = !!p && p.currentTime > 10;
+    if (started) startedCount++;
+    if (completed) completedCount++;
+    // First gap in the seder = the earliest shiur not yet finished.
+    if (!completed && firstNotCompletedIndex === -1) firstNotCompletedIndex = i;
+    // Track the most recently listened shiur that's mid-way (resume target).
+    if (!completed && started) {
+      const t = new Date(p!.lastListened).getTime();
+      if (t >= resumeLastListened) {
+        resumeLastListened = t;
+        resumeIndex = i;
+      }
+    }
+  });
+
+  // 1) Resume the shiur you were last in the middle of (where you left off).
+  if (resumeIndex !== null) {
+    return { nextIndex: resumeIndex, shouldResume: true, completedCount, startedCount, total, done: false };
+  }
+  // 2) Otherwise continue at the FIRST un-done shiur in the seder (fills earlier
+  //    gaps rather than jumping past them).
+  if (firstNotCompletedIndex !== -1) {
+    return { nextIndex: firstNotCompletedIndex, shouldResume: false, completedCount, startedCount, total, done: false };
+  }
+  // 3) Everything is completed.
+  return { nextIndex: null, shouldResume: false, completedCount, startedCount, total, done: true };
+}

@@ -1,7 +1,8 @@
 import { fetchAllShiurim } from "./shiurim";
 import { SERIES, SERIES_GROUPS, classifyYomTovTopic, matchTitleToSeries } from "./seriesConfig";
+import { getOrderedSlugsForGroup, getTrackMeta } from "./tracks";
 import { PARSHIYOS_BY_SEFER } from "./categoryConfig";
-import type { Shiur, SeriesStats, SeriesDef } from "./types";
+import type { Shiur, SeriesStats, SeriesDef, SeriesGroup } from "./types";
 
 /**
  * Series that are dedicated study tracks (a sefer, a Rambam, a navi).
@@ -179,6 +180,99 @@ export async function getLandingData(): Promise<{
     totalCount: allShiurim.length,
     latestShiurim: allShiurim.slice(0, 6),
   };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Ordered learning tracks (e.g., the Navi / Tanach journey)          */
+/* ------------------------------------------------------------------ */
+
+export interface TrackShiurEntry {
+  shiur: Shiur;
+  seriesSlug: string;
+  seriesName: string;
+  /** Global position in the track (0-based, in seder). */
+  orderIndex: number;
+}
+
+export interface TrackSeriesEntry {
+  slug: string;
+  name: string;
+  count: number;
+  /** Global order index of this sefer's first shiur within the track. */
+  startIndex: number;
+}
+
+export interface TrackData {
+  group: string;
+  label: string;
+  description: string;
+  /** Every shiur in the track, flattened in seder (oldest-first per sefer). */
+  ordered: TrackShiurEntry[];
+  /** Per-sefer breakdown, in track order. */
+  series: TrackSeriesEntry[];
+  totalCount: number;
+}
+
+/**
+ * Build the ordered learning track for a group (currently Navi). Each sefer's
+ * shiurim are sorted oldest-first (the order they were taught = the seder),
+ * then concatenated in displayOrder so the whole list reads Yehoshua → … →
+ * Melachim II. Returns null when the group isn't a multi-sefer track.
+ */
+export async function getTrackData(group: NonNullable<SeriesGroup>): Promise<TrackData | null> {
+  const meta = getTrackMeta(group);
+  if (!meta) return null;
+
+  const slugs = getOrderedSlugsForGroup(group);
+  if (slugs.length < 2) return null;
+
+  const allShiurim = await fetchAllShiurim();
+  const ordered: TrackShiurEntry[] = [];
+  const series: TrackSeriesEntry[] = [];
+  let idx = 0;
+
+  for (const slug of slugs) {
+    const def = SERIES.find((s) => s.slug === slug);
+    if (!def) continue;
+    const list = filterSeriesShiurim(def, allShiurim).sort(
+      (a, b) => new Date(a.pubDate).getTime() - new Date(b.pubDate).getTime()
+    );
+    if (list.length === 0) continue;
+
+    series.push({ slug, name: def.name, count: list.length, startIndex: idx });
+    for (const shiur of list) {
+      ordered.push({ shiur, seriesSlug: slug, seriesName: def.name, orderIndex: idx });
+      idx++;
+    }
+  }
+
+  if (ordered.length === 0) return null;
+
+  return {
+    group,
+    label: meta.label,
+    description: meta.description,
+    ordered,
+    series,
+    totalCount: ordered.length,
+  };
+}
+
+/**
+ * The first (oldest) shiur of the series that follows `slug` in its track.
+ * Used so the final shiur of a sefer auto-advances into the next sefer.
+ */
+export async function getNextTrackShiur(slug: string): Promise<Shiur | null> {
+  const { getNextSeriesSlug } = await import("./tracks");
+  const nextSlug = getNextSeriesSlug(slug);
+  if (!nextSlug) return null;
+  const def = SERIES.find((s) => s.slug === nextSlug);
+  if (!def) return null;
+  const allShiurim = await fetchAllShiurim();
+  const list = filterSeriesShiurim(def, allShiurim).sort(
+    (a, b) => new Date(a.pubDate).getTime() - new Date(b.pubDate).getTime()
+  );
+  return list[0] ?? null;
 }
 
 /**

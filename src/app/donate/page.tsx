@@ -15,22 +15,32 @@ export default function DonatePage() {
   return (
     <main>
       {/* Hero */}
-      <section className="bg-navy py-24 px-6 text-center">
+      <section className="bg-navy py-24 md:py-28 px-6 text-center">
         <motion.div
           initial="hidden"
           animate="visible"
           variants={stagger}
           className="max-w-4xl mx-auto"
         >
+          <motion.p
+            variants={fadeUp}
+            className="eyebrow mb-4"
+          >
+            Partner With Us
+          </motion.p>
           <motion.h1
             variants={fadeUp}
-            className="serif-heading text-primary text-5xl md:text-6xl font-bold mb-6"
+            className="serif-heading text-primary text-5xl md:text-6xl font-bold text-balance"
           >
             Support Our Community
           </motion.h1>
+          <motion.div
+            variants={fadeUp}
+            className="gold-divider mx-auto mt-6 mb-6"
+          />
           <motion.p
             variants={fadeUp}
-            className="text-white/80 text-xl font-light max-w-2xl mx-auto"
+            className="text-white/80 text-xl font-light max-w-2xl mx-auto text-pretty"
           >
             Your generosity sustains our Torah learning, community programs, and
             chesed initiatives
@@ -44,12 +54,12 @@ export default function DonatePage() {
         whileInView="visible"
         viewport={{ once: true }}
         variants={stagger}
-        className="py-20 px-6 bg-bg-alt"
+        className="py-20 md:py-24 px-6 bg-bg-alt"
       >
         <div className="max-w-5xl mx-auto">
           <motion.p
             variants={fadeUp}
-            className="text-navy/80 text-lg leading-relaxed text-center max-w-3xl mx-auto mb-16"
+            className="text-navy/70 text-lg leading-relaxed text-center max-w-3xl mx-auto mb-16 text-pretty"
           >
             Kahal Beis Tefilla relies on the generosity of our members and
             friends worldwide. Your contributions directly support our daily
@@ -57,25 +67,28 @@ export default function DonatePage() {
             programs. Choose one of our secure donation options below.
           </motion.p>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <motion.a
               variants={fadeUp}
               href="https://www.matara.pro/nedarimplus/online/?mosad=7012328"
               target="_blank"
               rel="noopener noreferrer"
-              className="group bg-white border-2 border-primary/20 rounded-2xl p-10 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all text-center"
+              className="group card card-hover shadow-card hover:shadow-card-hover border-2 border-primary/20 rounded-2xl p-10 text-center"
             >
-              <div className="size-20 bg-primary/10 rounded-full mx-auto mb-6 flex items-center justify-center">
+              <div className="size-20 bg-primary/10 rounded-full mx-auto mb-6 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
                 <span className="text-primary text-4xl">&#x20AA;</span>
               </div>
-              <h3 className="serif-heading text-navy text-2xl font-bold mb-3">
+              <h3 className="serif-heading text-navy text-xl md:text-2xl font-bold mb-3">
                 Donate in Shekels
               </h3>
-              <p className="text-navy/60 mb-6">
+              <p className="text-navy/70 mb-8 leading-relaxed text-pretty">
                 Secure credit card donation in Israeli Shekels via Nedarim Plus
               </p>
-              <span className="inline-flex items-center gap-2 bg-primary text-navy px-8 py-3 rounded-xl font-bold group-hover:bg-primary-light transition-colors">
-                Donate Now &#x2192;
+              <span className="btn btn-primary px-8 py-3.5 text-base">
+                Donate Now
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
               </span>
             </motion.a>
 
@@ -84,19 +97,22 @@ export default function DonatePage() {
               href="https://kbt.kollelnernaftali.org/"
               target="_blank"
               rel="noopener noreferrer"
-              className="group bg-white border-2 border-primary/20 rounded-2xl p-10 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all text-center"
+              className="group card card-hover shadow-card hover:shadow-card-hover border-2 border-primary/20 rounded-2xl p-10 text-center"
             >
-              <div className="size-20 bg-primary/10 rounded-full mx-auto mb-6 flex items-center justify-center">
+              <div className="size-20 bg-primary/10 rounded-full mx-auto mb-6 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
                 <span className="text-primary text-4xl">$</span>
               </div>
-              <h3 className="serif-heading text-navy text-2xl font-bold mb-3">
+              <h3 className="serif-heading text-navy text-xl md:text-2xl font-bold mb-3">
                 Donate via Kollel Ner Naftali
               </h3>
-              <p className="text-navy/60 mb-6">
+              <p className="text-navy/70 mb-8 leading-relaxed text-pretty">
                 Tax-deductible donations through Kollel Ner Naftali
               </p>
-              <span className="inline-flex items-center gap-2 bg-primary text-navy px-8 py-3 rounded-xl font-bold group-hover:bg-primary-light transition-colors">
-                Donate Now &#x2192;
+              <span className="btn btn-primary px-8 py-3.5 text-base">
+                Donate Now
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
               </span>
             </motion.a>
           </div>
@@ -109,16 +125,20 @@ export default function DonatePage() {
         whileInView="visible"
         viewport={{ once: true }}
         variants={stagger}
-        className="py-20 px-6 bg-bg-light"
+        className="py-20 md:py-24 px-6 bg-bg-light"
       >
-        <div className="max-w-5xl mx-auto">
-          <motion.h2
-            variants={fadeUp}
-            className="serif-heading text-navy text-3xl font-bold mb-10 text-center"
-          >
-            What Your Donation Supports
-          </motion.h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="max-w-6xl mx-auto">
+          <motion.div variants={fadeUp} className="text-center mb-14">
+            <p className="eyebrow mb-3">Your Impact</p>
+            <h2 className="serif-heading text-navy text-4xl md:text-5xl font-bold">
+              What Your Donation Supports
+            </h2>
+            <div className="gold-divider mx-auto mt-5 mb-4" />
+            <p className="text-navy/60 text-lg text-pretty">
+              Every gift strengthens Torah, community, and chesed in Ramat Eshkol
+            </p>
+          </motion.div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
                 title: "Torah Learning",
@@ -148,13 +168,13 @@ export default function DonatePage() {
               <motion.div
                 key={item.title}
                 variants={fadeUp}
-                className="bg-white border border-primary/15 rounded-xl p-8 shadow-sm text-center"
+                className="card card-hover shadow-card hover:shadow-card-hover border border-primary/15 rounded-xl p-8 text-center"
               >
-                <div className="w-10 h-0.5 bg-primary mx-auto mb-6" />
-                <h3 className="text-navy font-bold text-lg mb-2">
+                <div className="gold-divider mx-auto mb-6" />
+                <h3 className="serif-heading text-navy font-bold text-lg md:text-xl mb-3">
                   {item.title}
                 </h3>
-                <p className="text-navy/60 text-sm">{item.desc}</p>
+                <p className="text-navy/70 text-sm leading-relaxed text-pretty">{item.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -162,7 +182,7 @@ export default function DonatePage() {
       </motion.section>
 
       {/* Quote */}
-      <section className="py-20 px-6 bg-navy text-center">
+      <section className="py-24 md:py-28 px-6 bg-navy text-center">
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -170,10 +190,11 @@ export default function DonatePage() {
           variants={fadeUp}
           className="max-w-3xl mx-auto"
         >
-          <h2 className="serif-heading text-primary text-3xl font-bold italic mb-6">
+          <h2 className="serif-heading text-primary text-3xl md:text-4xl font-bold italic leading-tight text-balance">
             &ldquo;Tzedakah is equal to all the other commandments
             combined.&rdquo;
           </h2>
+          <div className="gold-divider mx-auto mt-7 mb-6" />
           <p className="text-white/60 font-semibold tracking-[0.3em] uppercase text-sm">
             &mdash; Bava Basra 9a
           </p>
