@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 
 const fadeUp = {
@@ -185,34 +185,12 @@ ${formData.notes}`);
             <h3 className="serif-heading text-navy font-bold text-2xl mb-7 flex items-center gap-2.5">
               <BookIcon /> The Limudim
             </h3>
-            <div className="space-y-8">
-              {LIMUDIM.map((group) => (
-                <div key={group.category}>
-                  <p className="eyebrow text-primary-dark mb-3.5">{group.category}</p>
-                  <ul className="space-y-3">
-                    {group.items.map((item) => (
-                      <li key={item.en} className="flex items-start gap-3">
-                        <CheckIcon />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5">
-                            <span className="text-navy font-medium">
-                              {item.en}
-                              {item.excerpt && (
-                                <span className="text-navy/35 text-xs font-normal ml-2 align-middle">excerpt</span>
-                              )}
-                            </span>
-                            <span className="hebrew-heading text-navy/55 text-lg leading-none" dir="rtl">
-                              {item.he}
-                            </span>
-                          </div>
-                          {item.note && (
-                            <p className="text-navy/45 text-sm mt-1 text-pretty">{item.note}</p>
-                          )}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+            <p className="text-navy/50 text-sm mb-5">
+              Tap any section to see what is learned.
+            </p>
+            <div className="space-y-2.5">
+              {LIMUDIM.map((group, i) => (
+                <LimudGroup key={group.category} group={group} defaultOpen={i === 0} />
               ))}
             </div>
             <div className="mt-8 p-4 bg-primary/5 rounded-lg border border-primary/10">
@@ -498,6 +476,78 @@ function BookIcon() {
     >
       <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
     </svg>
+  );
+}
+
+function LimudGroup({
+  group,
+  defaultOpen = false,
+}: {
+  group: (typeof LIMUDIM)[number];
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="border border-primary/15 rounded-xl overflow-hidden bg-white">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className={`w-full flex items-center justify-between gap-3 px-5 py-3.5 text-left transition-colors ${
+          open ? "bg-primary/[0.04]" : "hover:bg-primary/[0.03]"
+        }`}
+      >
+        <span className="flex items-baseline gap-2.5 min-w-0">
+          <span className="text-navy font-semibold">{group.category}</span>
+          <span className="text-navy/35 text-sm tabular-nums">{group.items.length}</span>
+        </span>
+        <svg
+          className={`w-5 h-5 shrink-0 text-primary transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          strokeWidth={2.5}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="content"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
+            className="overflow-hidden"
+          >
+            <ul className="px-5 pb-5 pt-1.5 space-y-3 border-t border-primary/10">
+              {group.items.map((item) => (
+                <li key={item.en} className="flex items-start gap-3">
+                  <CheckIcon />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5">
+                      <span className="text-navy font-medium">
+                        {item.en}
+                        {item.excerpt && (
+                          <span className="text-navy/35 text-xs font-normal ml-2 align-middle">excerpt</span>
+                        )}
+                      </span>
+                      <span className="hebrew-heading text-navy/55 text-lg leading-none" dir="rtl">
+                        {item.he}
+                      </span>
+                    </div>
+                    {item.note && (
+                      <p className="text-navy/45 text-sm mt-1 text-pretty">{item.note}</p>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
