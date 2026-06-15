@@ -63,7 +63,7 @@ const LIMUDIM: {
     category: "Nevi'im & Kesuvim",
     items: [
       { en: "Shmuel I, Perek 2", he: "שמואל א׳ פרק ב׳", excerpt: true },
-      { en: "Yeshaya, Perek 58", he: "ישעיה פרק נ״ח", excerpt: true },
+      { en: "Yeshaya", he: "ישעיה", excerpt: true },
       { en: "Mishlei, Perek 16", he: "משלי פרק ט״ז", excerpt: true },
       { en: "Mishlei, Perek 31", he: "משלי פרק ל״א", excerpt: true },
     ],
