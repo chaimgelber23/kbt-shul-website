@@ -31,7 +31,7 @@ const LIMUDIM: {
       {
         en: "Maseches Mikvaos, Perek 7",
         he: "מסכת מקוואות פרק ז׳",
-        note: "The first letters of the last seven mishnayos spell נשמה (neshama).",
+        note: "The first letters of the last four mishnayos spell נשמה (neshama).",
       },
       {
         en: "Maseches Keilim, Perek 24",
@@ -110,33 +110,43 @@ export default function YahrtTime() {
     notes: "",
   });
 
-  // Floating "Dedicate a Limud" CTA — appears once you scroll past the hero,
-  // hides again when the registration form itself is on screen.
+  // Floating "Dedicate a Limud" CTA. It arms only once the reader reaches the
+  // "How It Works" section (so it never covers the interactive Limudim accordion
+  // above it), and retires for good once the form is reached (so it doesn't
+  // resurrect over the Questions/footer). Pure IntersectionObservers — no scroll
+  // listener.
   const [showFloat, setShowFloat] = useState(false);
   useEffect(() => {
+    const how = document.getElementById("how");
     const register = document.getElementById("register");
-    let pastHero = false;
+    let armed = false;
+    let reachedForm = false;
     let registerVisible = false;
-    const update = () => setShowFloat(pastHero && !registerVisible);
-    const onScroll = () => {
-      pastHero = window.scrollY > 520;
-      update();
-    };
-    const io = register
+    const update = () => setShowFloat(armed && !reachedForm && !registerVisible);
+    const ioHow = how
       ? new IntersectionObserver(
-          ([entry]) => {
-            registerVisible = entry.isIntersecting;
+          ([e]) => {
+            if (e.isIntersecting) armed = true;
             update();
           },
-          { threshold: 0.15 }
+          { threshold: 0.1 }
         )
       : null;
-    if (register && io) io.observe(register);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
+    const ioReg = register
+      ? new IntersectionObserver(
+          ([e]) => {
+            registerVisible = e.isIntersecting;
+            if (e.isIntersecting) reachedForm = true;
+            update();
+          },
+          { threshold: 0.12 }
+        )
+      : null;
+    if (how && ioHow) ioHow.observe(how);
+    if (register && ioReg) ioReg.observe(register);
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      io?.disconnect();
+      ioHow?.disconnect();
+      ioReg?.disconnect();
     };
   }, []);
 
@@ -161,47 +171,35 @@ ${formData.notes}`);
 
   return (
     <main>
-      {/* Hero */}
+      {/* Hero — rendered statically (no entrance animation) so the LCP headline
+          paints immediately and isn't gated behind JS hydration. */}
       <section className="relative min-h-[72vh] flex items-center justify-center overflow-hidden bg-navy">
         <Image
           src="/pictures/beis-medrash-chandeliers.jpg"
           alt="Torah learning in the Kahal Beis Tefilla beis medrash"
           fill
+          sizes="100vw"
           className="object-cover"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/90 to-navy/75" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(27,42,74,0.55)_100%)]" />
+        {/* Deep, even scrim keeps the headline zone calm and the tone somber */}
+        <div className="absolute inset-0 bg-navy/55" />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/85 to-navy/80" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(27,42,74,0.5)_100%)]" />
 
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={stagger}
-          className="relative z-10 max-w-3xl mx-auto text-center px-6 py-24"
-        >
-          <motion.p variants={fadeUp} className="eyebrow text-primary-light/90 mb-4">
-            Kahal Beis Tefilla
-          </motion.p>
-          <motion.h1
-            variants={fadeUp}
-            className="serif-heading text-primary text-5xl md:text-6xl font-bold mb-6 text-balance drop-shadow-[0_2px_20px_rgba(0,0,0,0.4)]"
-          >
+        <div className="relative z-10 max-w-3xl mx-auto text-center px-6 py-24">
+          <p className="eyebrow text-primary-light mb-4">Kahal Beis Tefilla</p>
+          <h1 className="serif-heading text-primary text-5xl md:text-6xl font-bold mb-6 text-balance">
             Yahrtzeit Learning Program
-          </motion.h1>
-          <motion.div variants={fadeUp} className="gold-divider mx-auto mb-6" />
-          <motion.p
-            variants={fadeUp}
-            className="text-white/85 text-lg md:text-xl font-light text-pretty leading-relaxed"
-          >
+          </h1>
+          <div className="gold-divider mx-auto mb-6" />
+          <p className="text-white/90 text-lg md:text-xl font-light text-pretty leading-relaxed">
             Honor a loved one&apos;s neshama with Torah learned in their memory &mdash; a
             curriculum of mishnayos, gemara, and zohar completed by the avreichim of our
             shul on the yahrtzeit.
-          </motion.p>
+          </p>
 
-          <motion.div
-            variants={fadeUp}
-            className="flex flex-wrap items-center justify-center gap-4 mt-9"
-          >
+          <div className="flex flex-wrap items-center justify-center gap-4 mt-9">
             <a href="#register" className="btn btn-primary px-8 py-3.5 text-base">
               Dedicate a Limud
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
@@ -210,16 +208,16 @@ ${formData.notes}`);
             </a>
             <a
               href="#how"
-              className="inline-flex items-center gap-2 border border-white/25 text-white/90 px-7 py-3.5 rounded-xl font-semibold hover:bg-white/10 hover:border-white/40 transition-all"
+              className="inline-flex items-center gap-2 border border-white/30 text-white px-7 py-3.5 rounded-xl font-semibold hover:bg-white/10 hover:border-white/50 transition-all"
             >
               How it works
             </a>
-          </motion.div>
+          </div>
 
-          <motion.p variants={fadeUp} className="mt-7 text-white/55 text-sm">
+          <p className="mt-7 inline-flex items-center gap-2 bg-navy/50 backdrop-blur-sm rounded-full px-4 py-1.5 text-white/80 text-sm">
             Suggested donation $360 &middot; Payment only after the limud is completed
-          </motion.p>
-        </motion.div>
+          </p>
+        </div>
       </section>
 
       {/* Overview */}
@@ -250,7 +248,7 @@ ${formData.notes}`);
             <h3 className="serif-heading text-navy font-bold text-2xl mb-7 flex items-center gap-2.5">
               <BookIcon /> The Limudim
             </h3>
-            <p className="text-navy/50 text-sm mb-5">
+            <p className="text-navy/65 text-sm mb-5">
               Tap any section to see what is learned.
             </p>
             <div className="space-y-2.5">
@@ -327,34 +325,38 @@ ${formData.notes}`);
               Register for the Program
             </h2>
             <div className="gold-divider mx-auto mb-6" />
-            <p className="text-navy/70">
-              Please fill out this form, contact us via WhatsApp at{" "}
-              <a
-                href="https://wa.me/972534631889"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                +972-53-463-1889
-              </a>
-              , or email{" "}
-              <a
-                href="mailto:kbtdraw@gmail.com"
-                className="text-primary hover:underline"
-              >
-                kbtdraw@gmail.com
-              </a>{" "}
-              to navigate the yahrtzeit program.
+            <p className="text-navy/70 text-pretty">
+              Share the yahrtzeit details below and we&apos;ll arrange the limud
+              l&apos;ilui nishmas your loved one.
             </p>
             <div className="mt-5 inline-flex items-center gap-2.5 bg-primary/10 border border-primary/25 rounded-full px-5 py-2">
               <span className="text-navy/60 text-sm">Suggested donation</span>
               <span className="text-navy font-bold text-lg">$360</span>
             </div>
+            <p className="mt-4 text-navy/60 text-sm">
+              Prefer to reach us directly? WhatsApp{" "}
+              <a
+                href="https://wa.me/972534631889"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-navy font-medium underline underline-offset-2 hover:text-primary-dark"
+              >
+                +972-53-463-1889
+              </a>{" "}
+              or email{" "}
+              <a
+                href="mailto:kbtdraw@gmail.com"
+                className="text-navy font-medium underline underline-offset-2 hover:text-primary-dark"
+              >
+                kbtdraw@gmail.com
+              </a>
+              .
+            </p>
           </div>
 
           <form
             onSubmit={handleSubmit}
-            className="bg-white border-2 border-primary/20 rounded-2xl p-8 shadow-xl space-y-6"
+            className="bg-white border border-primary/15 rounded-2xl p-8 shadow-float space-y-6"
           >
             <div className="grid md:grid-cols-2 gap-6">
               <FormField
@@ -429,10 +431,11 @@ ${formData.notes}`);
                 />
 
                 <div>
-                  <label className="block text-sm font-semibold text-navy mb-2">
+                  <label htmlFor="yz-notes" className="block text-sm font-semibold text-navy mb-2">
                     Additional Notes
                   </label>
                   <textarea
+                    id="yz-notes"
                     rows={4}
                     className="w-full border-2 border-primary/20 rounded-lg px-4 py-3 text-navy focus:border-primary focus:outline-none transition-colors"
                     placeholder="Any special requests or information..."
@@ -539,13 +542,19 @@ function FormField({
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
+  const id = `yz-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`;
   return (
     <div>
-      <label className="block text-sm font-semibold text-navy mb-2">
+      <label htmlFor={id} className="block text-sm font-semibold text-navy mb-2">
         {label}
-        {required && <span className="text-primary ml-1">*</span>}
+        {required && (
+          <span className="text-primary-dark ml-1" aria-hidden="true">
+            *
+          </span>
+        )}
       </label>
       <input
+        id={id}
         type={type}
         required={required}
         placeholder={placeholder}
@@ -591,7 +600,7 @@ function LimudGroup({
       >
         <span className="flex items-baseline gap-2.5 min-w-0">
           <span className="text-navy font-semibold">{group.category}</span>
-          <span className="text-navy/35 text-sm tabular-nums">{group.items.length}</span>
+          <span className="text-navy/60 text-sm tabular-nums">{group.items.length}</span>
         </span>
         <svg
           className={`w-5 h-5 shrink-0 text-primary transition-transform duration-300 ${open ? "rotate-180" : ""}`}
@@ -622,15 +631,17 @@ function LimudGroup({
                       <span className="text-navy font-medium">
                         {item.en}
                         {item.excerpt && (
-                          <span className="text-navy/35 text-xs font-normal ml-2 align-middle">excerpt</span>
+                          <span className="inline-block ml-2 align-middle bg-navy/8 text-navy/70 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
+                            excerpt
+                          </span>
                         )}
                       </span>
-                      <span className="hebrew-heading text-navy/55 text-lg leading-none" dir="rtl">
+                      <span className="hebrew-heading text-navy/70 text-lg leading-none ms-auto text-right" dir="rtl">
                         {item.he}
                       </span>
                     </div>
                     {item.note && (
-                      <p className="text-navy/45 text-sm mt-1 text-pretty">{item.note}</p>
+                      <p className="text-navy/65 text-sm mt-1 text-pretty">{item.note}</p>
                     )}
                   </div>
                 </li>
