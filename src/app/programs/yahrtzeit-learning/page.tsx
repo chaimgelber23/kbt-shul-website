@@ -13,6 +13,90 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.15 } },
 };
 
+// The actual curriculum the avreichim learn l'ilui nishmas the niftar, selected
+// for a yahrtzeit by the Chida and the mekubalim. (he = Hebrew; note = the kavana.)
+const LIMUDIM: {
+  category: string;
+  items: { en: string; he: string; note?: string; excerpt?: boolean }[];
+}[] = [
+  {
+    category: "Mishnayos",
+    items: [
+      {
+        en: "Individual mishnayos spelling the niftar's name",
+        he: "משניות (בודדות) על שם הנפטר",
+        note: "The essence of the tikkun — the neshama is illuminated through the letters of its name.",
+      },
+      {
+        en: "Maseches Mikvaos, Perek 7",
+        he: "מסכת מקוואות פרק ז׳",
+        note: "The first letters of the last seven mishnayos spell נשמה (neshama).",
+      },
+      {
+        en: "Maseches Keilim, Perek 24",
+        he: "מסכת כלים פרק כ״ד",
+        note: "Each mishnah closes with “l'taher mikulam” — a remez to the neshama.",
+      },
+    ],
+  },
+  {
+    category: "Tehillim",
+    items: [
+      {
+        en: "The Bnei Korach kapitlach",
+        he: "תהילים — פרקי בני קרח",
+        note: "Eight mizmorim that raise the neshama from the levels of Gehinnom.",
+      },
+    ],
+  },
+  {
+    category: "Chumash",
+    items: [
+      { en: "Parshas Bereishis (Rishon–Sheni)", he: "פרשת בראשית", excerpt: true },
+      { en: "Birkas Kohanim (Parshas Naso)", he: "ברכת כהנים — פרשת נשא", excerpt: true },
+      { en: "Vayehi Binso'a HaAron (Parshas Beha'aloscha)", he: "ויהי בנסוע הארון — פרשת בהעלותך", excerpt: true },
+      { en: "Parshas Zos HaBracha", he: "פרשת זאת הברכה", excerpt: true },
+    ],
+  },
+  {
+    category: "Nevi'im & Kesuvim",
+    items: [
+      { en: "Shmuel I, Perek 2", he: "שמואל א׳ פרק ב׳", excerpt: true },
+      { en: "Yeshaya, Perek 58", he: "ישעיה פרק נ״ח", excerpt: true },
+      { en: "Mishlei, Perek 16", he: "משלי פרק ט״ז", excerpt: true },
+      { en: "Mishlei, Perek 31", he: "משלי פרק ל״א", excerpt: true },
+    ],
+  },
+  {
+    category: "Gemara",
+    items: [
+      {
+        en: "Berachos 15b",
+        he: "ברכות דף ט״ו:",
+        note: "גמרא is the roshei teivos of the malachei rachamim — Gavriel, Michael, Refael, Uriel.",
+        excerpt: true,
+      },
+      { en: "Berachos 17a", he: "ברכות דף י״ז.", excerpt: true },
+      { en: "Shabbos 89a", he: "שבת דף פ״ט.", excerpt: true },
+      { en: "Makkos 23b–24a", he: "מכות דף כ״ג: – כ״ד.", excerpt: true },
+      { en: "Sanhedrin 104b", he: "סנהדרין דף ק״ד:", excerpt: true },
+      { en: "Zevachim 88b", he: "זבחים דף פ״ח:", excerpt: true },
+      { en: "Menachos 43b", he: "מנחות דף מ״ג:", excerpt: true },
+    ],
+  },
+  {
+    category: "Zohar",
+    items: [
+      {
+        en: "Zohar / Idra",
+        he: "זוהר / אדרא",
+        note: "Per the mekubalim, Zohar — from mazhir — illuminates the neshama more than revealed limud.",
+        excerpt: true,
+      },
+    ],
+  },
+];
+
 export default function YahrtTime() {
   const [formData, setFormData] = useState({
     name: "",
@@ -54,15 +138,19 @@ ${formData.notes}`);
           variants={stagger}
           className="max-w-4xl mx-auto"
         >
+          <motion.p variants={fadeUp} className="eyebrow text-primary-light/90 mb-4">
+            Kahal Beis Tefilla
+          </motion.p>
           <motion.h1
             variants={fadeUp}
-            className="serif-heading text-primary text-5xl md:text-6xl font-bold mb-6"
+            className="serif-heading text-primary text-5xl md:text-6xl font-bold mb-6 text-balance"
           >
             Yahrtzeit Learning Program
           </motion.h1>
+          <motion.div variants={fadeUp} className="gold-divider mx-auto mb-6" />
           <motion.p
             variants={fadeUp}
-            className="text-white/80 text-xl font-light"
+            className="text-white/80 text-xl font-light text-pretty"
           >
             Honor the memory of your loved ones with a specific Torah curriculum
           </motion.p>
@@ -78,35 +166,59 @@ ${formData.notes}`);
         className="py-20 px-6 bg-bg-alt"
       >
         <div className="max-w-4xl mx-auto">
-          <motion.div variants={fadeUp} className="text-center mb-12">
-            <h2 className="serif-heading text-navy text-4xl font-bold mb-6">
-              A Specific Curriculum for a Yahrtzeit
+          <motion.div variants={fadeUp} className="text-center mb-10">
+            <p className="eyebrow mb-3">A Curriculum With Meaning</p>
+            <h2 className="serif-heading text-navy text-4xl md:text-5xl font-bold mb-5">
+              A Specific Limud for a Yahrtzeit
             </h2>
-            <div className="w-20 h-1 bg-primary mx-auto mb-8" />
-            <p className="text-navy/80 text-lg leading-relaxed">
-              Our Yahrtzeit Learning Program provides a specially selected curriculum
-              (mesugel) of Torah study dedicated to elevating the neshamah of your
-              loved one on their yahrtzeit. Members of our kollel learn specific
-              limudim chosen for their spiritual significance.
+            <div className="gold-divider mx-auto mb-8" />
+            <p className="text-navy/75 text-lg leading-relaxed text-pretty">
+              With your donation, chashuva avreichim and members of the shul set aside
+              time to learn l&apos;ilui nishmas your loved one on their yahrtzeit. Each
+              limud is chosen for its specific significance &mdash; a curriculum selected
+              for a yahrtzeit by the Chida and the mekubalim.
             </p>
           </motion.div>
 
-          <motion.div
-            variants={fadeUp}
-            className="bg-white border-2 border-primary/20 rounded-xl p-8 mt-12"
-          >
-            <h3 className="text-navy font-bold text-2xl mb-4 flex items-center gap-2">
+          {/* The Limudim */}
+          <motion.div variants={fadeUp} className="card p-7 sm:p-9 mt-10">
+            <h3 className="serif-heading text-navy font-bold text-2xl mb-7 flex items-center gap-2.5">
               <BookIcon /> The Limudim
             </h3>
-            <p className="text-navy/70 mb-6">
-              With your donation, chashuva avreichim and members of the shul will set aside time to learn on the yahrtzeit of your loved one.
-            </p>
-            <p className="text-navy/70 mb-6">
-              The learning includes <strong>mishnayos in the name of the niftar</strong>, certain gemaras, and other limudim which are selected specially for a Yahrtzeit by the Chida (such as Zohar, and more).
-            </p>
-            <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
-              <p className="text-sm text-navy/70">
-                For the complete list of limudim and their sources, please contact us.
+            <div className="space-y-8">
+              {LIMUDIM.map((group) => (
+                <div key={group.category}>
+                  <p className="eyebrow text-primary-dark mb-3.5">{group.category}</p>
+                  <ul className="space-y-3">
+                    {group.items.map((item) => (
+                      <li key={item.en} className="flex items-start gap-3">
+                        <CheckIcon />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5">
+                            <span className="text-navy font-medium">
+                              {item.en}
+                              {item.excerpt && (
+                                <span className="text-navy/35 text-xs font-normal ml-2 align-middle">excerpt</span>
+                              )}
+                            </span>
+                            <span className="hebrew-heading text-navy/55 text-lg leading-none" dir="rtl">
+                              {item.he}
+                            </span>
+                          </div>
+                          {item.note && (
+                            <p className="text-navy/45 text-sm mt-1 text-pretty">{item.note}</p>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <div className="mt-8 p-4 bg-primary/5 rounded-lg border border-primary/10">
+              <p className="text-sm text-navy/65 text-pretty">
+                Items marked <span className="font-medium text-navy/75">excerpt</span> are learned as a portion.
+                For the full sources and the kavanos behind each limud, we&apos;re always happy to share &mdash; just reach out.
               </p>
             </div>
           </motion.div>
@@ -123,10 +235,11 @@ ${formData.notes}`);
       >
         <div className="max-w-5xl mx-auto">
           <motion.div variants={fadeUp} className="text-center mb-12">
-            <h2 className="serif-heading text-navy text-4xl font-bold mb-6">
+            <p className="eyebrow mb-3">Simple &amp; Meaningful</p>
+            <h2 className="serif-heading text-navy text-4xl md:text-5xl font-bold mb-5">
               How It Works
             </h2>
-            <div className="w-20 h-1 bg-primary mx-auto" />
+            <div className="gold-divider mx-auto" />
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -159,10 +272,11 @@ ${formData.notes}`);
       >
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="serif-heading text-navy text-4xl font-bold mb-6">
+            <p className="eyebrow mb-3">Dedicate a Limud</p>
+            <h2 className="serif-heading text-navy text-4xl md:text-5xl font-bold mb-5">
               Register for the Program
             </h2>
-            <div className="w-20 h-1 bg-primary mx-auto mb-6" />
+            <div className="gold-divider mx-auto mb-6" />
             <p className="text-navy/70">
               Please fill out this form, contact us via WhatsApp at{" "}
               <a
@@ -281,10 +395,7 @@ ${formData.notes}`);
             </div>
 
             <div className="pt-6">
-              <button
-                type="submit"
-                className="w-full bg-primary text-navy font-bold py-4 rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all text-lg"
-              >
+              <button type="submit" className="btn btn-primary w-full py-4 text-lg">
                 Submit Request
               </button>
               <p className="text-sm text-navy/60 text-center mt-4">
@@ -310,16 +421,10 @@ ${formData.notes}`);
             specific requirements, please contact us:
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="mailto:office@kbtshul.org"
-              className="bg-white border-2 border-primary/20 text-navy px-6 py-3 rounded-lg font-semibold hover:bg-primary/5 transition-colors"
-            >
+            <a href="mailto:office@kbtshul.org" className="btn btn-ghost px-6 py-3">
               office@kbtshul.org
             </a>
-            <Link
-              href="/contact"
-              className="bg-primary text-navy px-6 py-3 rounded-lg font-semibold hover:shadow-md transition-shadow"
-            >
+            <Link href="/contact" className="btn btn-primary px-6 py-3">
               Contact Us
             </Link>
           </div>
@@ -393,5 +498,15 @@ function BookIcon() {
     >
       <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
     </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <span className="shrink-0 mt-0.5 flex items-center justify-center w-5 h-5 rounded-full bg-primary/12 text-primary">
+      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+      </svg>
+    </span>
   );
 }
