@@ -286,7 +286,12 @@ ${formData.notes}`);
             <div className="gold-divider mx-auto" />
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="relative grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-6">
+            {/* Connecting rail (desktop) */}
+            <div
+              className="hidden md:block absolute top-7 left-[16.6%] right-[16.6%] h-0.5 bg-primary/25"
+              aria-hidden
+            />
             <StepCard
               number="1"
               title="Submit Your Request"
@@ -295,12 +300,12 @@ ${formData.notes}`);
             <StepCard
               number="2"
               title="Kollel Learns"
-              description="Members of our kollel will complete the specific curriculum on or near the yahrtzeit date."
+              description="Members of our kollel complete the specific curriculum on or near the yahrtzeit date."
             />
             <StepCard
               number="3"
               title="Completion"
-              description="You'll be notified when the learning is completed. Payment will be requested after the limud is finished."
+              description="You're notified when the learning is finished. Payment is only requested after the limud is complete."
             />
           </div>
         </div>
@@ -509,12 +514,12 @@ function StepCard({
   description: string;
 }) {
   return (
-    <motion.div variants={fadeUp} className="text-center">
-      <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 text-primary rounded-full text-2xl font-bold mb-4">
+    <motion.div variants={fadeUp} className="relative text-center">
+      <div className="relative z-10 inline-flex items-center justify-center w-14 h-14 bg-primary text-navy rounded-full text-xl font-bold mb-5 shadow-gold ring-4 ring-bg-light">
         {number}
       </div>
-      <h4 className="text-navy font-bold text-xl mb-3">{title}</h4>
-      <p className="text-navy/70">{description}</p>
+      <h4 className="serif-heading text-navy font-bold text-xl mb-2.5">{title}</h4>
+      <p className="text-navy/65 text-pretty max-w-xs mx-auto">{description}</p>
     </motion.div>
   );
 }
