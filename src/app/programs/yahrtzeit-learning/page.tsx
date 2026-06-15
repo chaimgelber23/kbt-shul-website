@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -109,6 +110,36 @@ export default function YahrtTime() {
     notes: "",
   });
 
+  // Floating "Dedicate a Limud" CTA — appears once you scroll past the hero,
+  // hides again when the registration form itself is on screen.
+  const [showFloat, setShowFloat] = useState(false);
+  useEffect(() => {
+    const register = document.getElementById("register");
+    let pastHero = false;
+    let registerVisible = false;
+    const update = () => setShowFloat(pastHero && !registerVisible);
+    const onScroll = () => {
+      pastHero = window.scrollY > 520;
+      update();
+    };
+    const io = register
+      ? new IntersectionObserver(
+          ([entry]) => {
+            registerVisible = entry.isIntersecting;
+            update();
+          },
+          { threshold: 0.15 }
+        )
+      : null;
+    if (register && io) io.observe(register);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      io?.disconnect();
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Email submission logic here
@@ -131,28 +162,62 @@ ${formData.notes}`);
   return (
     <main>
       {/* Hero */}
-      <section className="bg-navy py-24 px-6 text-center">
+      <section className="relative min-h-[72vh] flex items-center justify-center overflow-hidden bg-navy">
+        <Image
+          src="/pictures/beis-medrash-chandeliers.jpg"
+          alt="Torah learning in the Kahal Beis Tefilla beis medrash"
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/90 to-navy/75" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(27,42,74,0.55)_100%)]" />
+
         <motion.div
           initial="hidden"
           animate="visible"
           variants={stagger}
-          className="max-w-4xl mx-auto"
+          className="relative z-10 max-w-3xl mx-auto text-center px-6 py-24"
         >
           <motion.p variants={fadeUp} className="eyebrow text-primary-light/90 mb-4">
             Kahal Beis Tefilla
           </motion.p>
           <motion.h1
             variants={fadeUp}
-            className="serif-heading text-primary text-5xl md:text-6xl font-bold mb-6 text-balance"
+            className="serif-heading text-primary text-5xl md:text-6xl font-bold mb-6 text-balance drop-shadow-[0_2px_20px_rgba(0,0,0,0.4)]"
           >
             Yahrtzeit Learning Program
           </motion.h1>
           <motion.div variants={fadeUp} className="gold-divider mx-auto mb-6" />
           <motion.p
             variants={fadeUp}
-            className="text-white/80 text-xl font-light text-pretty"
+            className="text-white/85 text-lg md:text-xl font-light text-pretty leading-relaxed"
           >
-            Honor the memory of your loved ones with a specific Torah curriculum
+            Honor a loved one&apos;s neshama with Torah learned in their memory &mdash; a
+            curriculum of mishnayos, gemara, and zohar completed by the avreichim of our
+            shul on the yahrtzeit.
+          </motion.p>
+
+          <motion.div
+            variants={fadeUp}
+            className="flex flex-wrap items-center justify-center gap-4 mt-9"
+          >
+            <a href="#register" className="btn btn-primary px-8 py-3.5 text-base">
+              Dedicate a Limud
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </a>
+            <a
+              href="#how"
+              className="inline-flex items-center gap-2 border border-white/25 text-white/90 px-7 py-3.5 rounded-xl font-semibold hover:bg-white/10 hover:border-white/40 transition-all"
+            >
+              How it works
+            </a>
+          </motion.div>
+
+          <motion.p variants={fadeUp} className="mt-7 text-white/55 text-sm">
+            Suggested donation $360 &middot; Payment only after the limud is completed
           </motion.p>
         </motion.div>
       </section>
@@ -205,11 +270,12 @@ ${formData.notes}`);
 
       {/* How It Works */}
       <motion.section
+        id="how"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
         variants={stagger}
-        className="py-20 px-6 bg-bg-light"
+        className="py-20 px-6 bg-bg-light scroll-mt-20"
       >
         <div className="max-w-5xl mx-auto">
           <motion.div variants={fadeUp} className="text-center mb-12">
@@ -242,11 +308,12 @@ ${formData.notes}`);
 
       {/* Registration Form */}
       <motion.section
+        id="register"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
         variants={fadeUp}
-        className="py-20 px-6 bg-bg-alt"
+        className="py-20 px-6 bg-bg-alt scroll-mt-20"
       >
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
@@ -274,9 +341,10 @@ ${formData.notes}`);
               </a>{" "}
               to navigate the yahrtzeit program.
             </p>
-            <p className="text-navy/60 text-sm mt-3">
-              The suggested donation is $360.
-            </p>
+            <div className="mt-5 inline-flex items-center gap-2.5 bg-primary/10 border border-primary/25 rounded-full px-5 py-2">
+              <span className="text-navy/60 text-sm">Suggested donation</span>
+              <span className="text-navy font-bold text-lg">$360</span>
+            </div>
           </div>
 
           <form
@@ -408,6 +476,25 @@ ${formData.notes}`);
           </div>
         </div>
       </motion.section>
+
+      {/* Floating CTA — always-present call to action */}
+      <AnimatePresence>
+        {showFloat && (
+          <motion.a
+            href="#register"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 24 }}
+            transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+            className="btn btn-primary fixed bottom-6 right-6 z-50 px-6 py-3.5 shadow-float"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+            Dedicate a Limud
+          </motion.a>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
